@@ -24,6 +24,8 @@ using namespace std;
 // xsize and ysize represent the window size - updated if window is reshaped to prevent stretching of the game
 int xsize = 400; 
 int ysize = 720;
+int r_type;
+int state;
 
 // current tile
 vec2 tile[4]; // An array of 4 2d vectors representing displacement from a 'center' piece of the tile, on the grid
@@ -127,11 +129,12 @@ void updatetile()
 void newtile()
 {
 	tilepos = vec2(5 , 19); // Put the tile at the top of the board
+	state = 0;
 
 	// Update the geometry VBO of current tile
-	int r = rand() % 4;
+	r_type = rand() % 4;
 	for (int i = 0; i < 4; i++)
-		tile[i] = allRotationsShapes[r][0][i]; // Get the 4 pieces of the new tile
+		tile[i] = allRotationsShapes[r_type][state][i]; // Get the 4 pieces of the new tile
 	updatetile(); 
 
 	// Update the color VBO of current tile
@@ -287,8 +290,23 @@ void init()
 //-------------------------------------------------------------------------------------------------------------------
 
 // Rotates the current tile, if there is room
-void rotate()
-{      
+//direction may be +1 or -1, denoting the following state of the tile
+void rotate(int direction)
+{
+    int i;
+    for(i=0;i<4;i++) {
+	GLfloat x = tilepos.x + allRotationsShapes[r_type][(state+direction)%4][i].x;
+	GLfloat y = tilepos.y + allRotationsShapes[r_type][(state+direction)%4][i].y;
+	if(board[int(x)][int(y)]==true||
+	   x<0||
+	   x>=10||
+	   y<0) break;
+    }
+    if(i==4) {
+      for(int j=0;j<4;j++) {
+	tile[j] =  allRotationsShapes[r_type][(state+direction)%4][j];
+      }
+    }
 
 }
 
@@ -396,7 +414,15 @@ void idle(void)
 //-------------------------------------------------------------------------------------------------------------------
 
 void timer(int value) {
-	tilepos.y += 1;
+	int i;
+	for(i=0;i<4;i++) {
+	  GLfloat x = tile[i].x+tilepos.x;
+	  GLfloat y = tile[i].y+tilepos.y-1;
+	  if(board[int(x)][int(y)]==true||y<0) break;
+	}
+	if(i==4) tilepos.y -= 1;
+	updatetile();
+	glutTimerFunc(1000,timer,10);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -416,7 +442,7 @@ int main(int argc, char **argv)
 	glutSpecialFunc(special);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(idle);
-	glutTimerFunc(1000, timer, 0);
+	glutTimerFunc(1000, timer, 10);
 
 	glutMainLoop(); // Start main loop
 	return 0;
