@@ -1,3 +1,4 @@
+
 /*
 CMPT 361 Assignment 1 - FruitTetris implementation Sample Skeleton Code
 
@@ -44,9 +45,9 @@ vec2 allRotationsShapes[4][4][4] =
 	},
 
 	{
-	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(-1,-1)},
+	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
 	{vec2(0, 1), vec2(0, 0), vec2(1,0), vec2(1, -1)},
-	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(-1,-1)},
+	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
 	{vec2(0, 1), vec2(0, 0), vec2(1,0), vec2(1, -1)}
 	},
 
@@ -96,12 +97,16 @@ GLuint vboIDs[6]; // Two Vertex Buffer Objects for each VAO (specifying vertex p
 // When the current tile is moved or rotated (or created), update the VBO containing its vertex position data
 void updatetile()
 {
+//	cout << "in update tile" << endl;
 	// Bind the VBO containing current tile vertex positions
 	glBindBuffer(GL_ARRAY_BUFFER, vboIDs[4]); 
 
 	// For each of the 4 'cells' of the tile,
 	for (int i = 0; i < 4; i++) 
 	{
+//		cout << "i:" << i << endl;
+//		cout << "x:" << tile[i].x << endl;
+//		cout << "y:" << tile[i].y << endl;
 		// Calculate the grid coordinates of the cell
 		GLfloat x = tilepos.x + tile[i].x; 
 		GLfloat y = tilepos.y + tile[i].y;
@@ -133,6 +138,7 @@ void newtile()
 
 	// Update the geometry VBO of current tile
 	r_type = rand() % 4;
+	cout << r_type << endl;
 	for (int i = 0; i < 4; i++)
 		tile[i] = allRotationsShapes[r_type][state][i]; // Get the 4 pieces of the new tile
 	updatetile(); 
@@ -294,19 +300,24 @@ void init()
 void rotate(int direction)
 {
     int i;
+    GLfloat x,y;
     for(i=0;i<4;i++) {
-	GLfloat x = tilepos.x + allRotationsShapes[r_type][(state+direction)%4][i].x;
-	GLfloat y = tilepos.y + allRotationsShapes[r_type][(state+direction)%4][i].y;
+	x = tilepos.x + allRotationsShapes[r_type][(state+direction)%4][i].x;
+	y = tilepos.y + allRotationsShapes[r_type][(state+direction)%4][i].y;
 	if(board[int(x)][int(y)]==true||
 	   x<0||
 	   x>=10||
 	   y<0) break;
     }
     if(i==4) {
+      state = (state+direction)%4;
+      cout << state << endl;
       for(int j=0;j<4;j++) {
-	tile[j] =  allRotationsShapes[r_type][(state+direction)%4][j];
+	tile[j].x =  allRotationsShapes[r_type][state][j].x;
+	tile[j].y =  allRotationsShapes[r_type][state][j].y;
       }
     }
+    updatetile();
 
 }
 
@@ -316,15 +327,64 @@ void rotate(int direction)
 // If every cell in the row is occupied, it will clear that cell and everything above it will shift down one row
 void checkfullrow(int row)
 {
+    cout << "row:" <<row<<endl;
+    int i;
+    for(i=0;i<10;i++) if(!board[i][row]) break;
+    if(i==10) {
+        cout<< "full!"<<endl;
+        for(int j=0;j<10;j++) board[j][row]=false;
+        for(int j=0;j<10;j++) {
+            for(int k=row; k<19;k++) {
+                board[j][k] = board[j][k+1];
+            }
+            board[j][19] = false;
+        }
+    }
+    //falling down
+//    for(int j=0;j<10;j++) {
+//        for(int k=0;k<20;k++) {
+//            if(board[j][k]) {
+//                int l;
+//                for(l=0;l<k;l++) {
+//                    if(!board[j][l]) {
+//                        board[j][l] = true;
+//                        board[j][k] = false;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 // Places the current tile - update the board vertex colour VBO and the array maintaining occupied cells
-void settile()
+void settle()
 {
-	
+	for (int i=0;i<4;i++) {
+        board[int(tilepos.x+tile[i].x)][int(tilepos.y+tile[i].y)] = true;
+    }
+    for (int i=0;i<4;i++) {
+        checkfullrow(tilepos.y+tile[i].y);
+        for (int i=0;i<20;i++) {
+            for (int j=0;j<10;j++) {
+                for (int k=0;k<6;k++) {
+                    if(board[j][i]==true)  boardcolours[6*(10*i+j)+k] = orange;
+                    else boardcolours[6*(10*i+j)+k] = black;
+                }
+            }
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[3]); // Bind the VBO containing current tile vertex colours
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(boardcolours), boardcolours); // Put the colour data in the VBO
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindVertexArray(0);
+    }
+
+
+
+    newtile();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -333,6 +393,19 @@ void settile()
 // Returns true if the tile was successfully moved, or false if there was some issue
 bool movetile(vec2 direction)
 {
+	GLfloat x,y;
+	int i;
+	for(i=0;i<4;i++) {
+	    x = tile[i].x + tilepos.x + direction.x;
+	    y = tile[i].y + tilepos.y + direction.y;
+	    if(board[int(x)][int(y)]==true||y<0||x<0||x>=10) break;
+	}
+	if(i==4) {
+	    tilepos.x += direction.x;
+	    tilepos.y += direction.y;
+	}else if(direction.x==0 && direction.y==-1) {
+        settle();
+    }
 	return false;
 }
 //-------------------------------------------------------------------------------------------------------------------
@@ -382,6 +455,20 @@ void reshape(GLsizei w, GLsizei h)
 // Handle arrow key keypresses
 void special(int key, int x, int y)
 {
+    switch(key) {
+        case GLUT_KEY_LEFT:
+	    movetile(vec2(-1,0));
+	    break;
+	case GLUT_KEY_RIGHT:
+	    movetile(vec2(1,0));
+	    break;
+	case GLUT_KEY_DOWN:
+	    movetile(vec2(0,-1));
+	    break;
+	case GLUT_KEY_UP:
+	    rotate(1);
+	    break;
+    }
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -414,13 +501,7 @@ void idle(void)
 //-------------------------------------------------------------------------------------------------------------------
 
 void timer(int value) {
-	int i;
-	for(i=0;i<4;i++) {
-	  GLfloat x = tile[i].x+tilepos.x;
-	  GLfloat y = tile[i].y+tilepos.y-1;
-	  if(board[int(x)][int(y)]==true||y<0) break;
-	}
-	if(i==4) tilepos.y -= 1;
+	movetile(vec2(0,-1));
 	updatetile();
 	glutTimerFunc(1000,timer,10);
 }
