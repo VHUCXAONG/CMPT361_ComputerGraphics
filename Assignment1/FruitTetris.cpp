@@ -27,7 +27,7 @@ int xsize = 400;
 int ysize = 720;
 int r_type;
 int state;
-
+unsigned linecounter = 0;
 // current tile
 vec2 tile[4]; // An array of 4 2d vectors representing displacement from a 'center' piece of the tile, on the grid
 vec2 tilepos = vec2(5, 19); // The position of the current tile using grid coordinates ((0,0) is the bottom left corner)
@@ -92,6 +92,23 @@ GLuint vaoIDs[3]; // One VAO for each object: the grid, the board, the current p
 GLuint vboIDs[6]; // Two Vertex Buffer Objects for each VAO (specifying vertex positions and colours, respectively)
 
 //-------------------------------------------------------------------------------------------------------------------
+//When the board is to be updated, update the VBO containing the board's vertext color data
+void updateBoard()
+{
+	for (int i=0;i<20;i++) {
+		for (int j=0;j<10;j++) {
+			for (int k=0;k<6;k++) {
+				if(board[j][i]==true)  boardcolours[6*(10*i+j)+k] = orange;
+				else boardcolours[6*(10*i+j)+k] = black;
+			}
+		}
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, vboIDs[3]); // Bind the VBO containing current board vertex colours
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(boardcolours), boardcolours); // Put the colour data in the VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
+}
 //-------------------------------------------------------------------------------------------------------------------
 
 // When the current tile is moved or rotated (or created), update the VBO containing its vertex position data
@@ -331,6 +348,7 @@ void checkfullrow(int row)
     int i;
     for(i=0;i<10;i++) if(!board[i][row]) break;
     if(i==10) {
+		linecounter ++;
         cout<< "full!"<<endl;
         for(int j=0;j<10;j++) board[j][row]=false;
         for(int j=0;j<10;j++) {
@@ -367,19 +385,7 @@ void settle()
     }
     for (int i=0;i<4;i++) {
         checkfullrow(tilepos.y+tile[i].y);
-        for (int i=0;i<20;i++) {
-            for (int j=0;j<10;j++) {
-                for (int k=0;k<6;k++) {
-                    if(board[j][i]==true)  boardcolours[6*(10*i+j)+k] = orange;
-                    else boardcolours[6*(10*i+j)+k] = black;
-                }
-            }
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, vboIDs[3]); // Bind the VBO containing current tile vertex colours
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(boardcolours), boardcolours); // Put the colour data in the VBO
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glBindVertexArray(0);
+		updateBoard();
     }
 
 
@@ -403,6 +409,7 @@ bool movetile(vec2 direction)
 	if(i==4) {
 	    tilepos.x += direction.x;
 	    tilepos.y += direction.y;
+		updatetile();
 	}else if(direction.x==0 && direction.y==-1) {
         settle();
     }
@@ -413,6 +420,14 @@ bool movetile(vec2 direction)
 // Starts the game over - empties the board, creates new tiles, resets line counters
 void restart()
 {
+	linecounter = 0;
+	for(int i=0;i<10;i++) {
+		for(int j=0;j<20;j++) {
+			board[i][j] = false;
+		}
+		updateBoard();
+	}
+	newtile();
 
 }
 //-------------------------------------------------------------------------------------------------------------------
@@ -503,7 +518,7 @@ void idle(void)
 void timer(int value) {
 	movetile(vec2(0,-1));
 	updatetile();
-	glutTimerFunc(1000,timer,10);
+	glutTimerFunc(300,timer,10);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -523,7 +538,7 @@ int main(int argc, char **argv)
 	glutSpecialFunc(special);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(idle);
-	glutTimerFunc(1000, timer, 10);
+	glutTimerFunc(300, timer, 10);
 
 	glutMainLoop(); // Start main loop
 	return 0;
