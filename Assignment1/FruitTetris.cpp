@@ -41,30 +41,30 @@ vec2 allRotationsShapes[4][4][4] =
 {
 	{
 	{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(-1,-1)},
-	{vec2(0, 1), vec2(0, 0), vec2(0,-1), vec2(1, -1)},     
-	{vec2(1, 1), vec2(-1,0), vec2(0, 0), vec2(1,  0)},  
-	{vec2(-1,1), vec2(0, 1), vec2(0, 0), vec2(0, -1)}
+	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 1)},
+	{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(1,  1)},
+	{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, -1)}
 	},
 
 	{
 	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
-	{vec2(0, 1), vec2(0, 0), vec2(1,0), vec2(1, -1)},
-	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
-	{vec2(0, 1), vec2(0, 0), vec2(1,0), vec2(1, -1)}
+	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, -1)},
+	{vec2(0, 0), vec2(1,0), vec2(0, 1), vec2(-1,1)},
+	{vec2(0, 0), vec2(0, -1), vec2(1,0), vec2(1, 1)}
 	},
 
 	{
 	{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(0, -1)},
-	{vec2(0, 1), vec2(0, 0), vec2(0,-1), vec2(1, 0)},     
-	{vec2(0, 1), vec2(-1,0), vec2(0, 0), vec2(1,  0)},  
-	{vec2(0,1), vec2(0, -1), vec2(0, 0), vec2(-1, 0)}
+	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 0)},
+	{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(0,  1)},
+	{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, 0)}
 	},
 
 	{
 	{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
-	{vec2(0, 1), vec2(0, 0), vec2(0,-1), vec2(0, -2)},
+	{vec2(0, 2), vec2(0, 1), vec2(0,0), vec2(0, -1)},
 	{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
-	{vec2(0, 1), vec2(0, 0), vec2(0,-1), vec2(0, -2)}
+	{vec2(0, 2), vec2(0, 1), vec2(0,0), vec2(0, -1)}
 	}
 };
 
@@ -376,20 +376,6 @@ void checkfullrow(int row)
 			for(int l=0;l<6;l++) boardcolours[6*(10*19+j)+l] = black;
         }
     }
-    //falling down
-//    for(int j=0;j<10;j++) {
-//        for(int k=0;k<20;k++) {
-//            if(board[j][k]) {
-//                int l;
-//                for(l=0;l<k;l++) {
-//                    if(!board[j][l]) {
-//                        board[j][l] = true;
-//                        board[j][k] = false;
-//                    }
-//                }
-//            }
-//        }
-//    }
 
 }
 
