@@ -25,11 +25,13 @@ using namespace std;
 // xsize and ysize represent the window size - updated if window is reshaped to prevent stretching of the game
 int xsize = 400; 
 int ysize = 720;
-int r_type;
-int state;
-unsigned linecounter = 0;
+int r_type; //random number for current tile type
+int r_colour; //random number for current block colour
+int state; //current tile state
+unsigned linecounter = 0; //counting the number of full lines
 // current tile
 vec2 tile[4]; // An array of 4 2d vectors representing displacement from a 'center' piece of the tile, on the grid
+vec4 tilecolour[4];
 vec2 tilepos = vec2(5, 19); // The position of the current tile using grid coordinates ((0,0) is the bottom left corner)
 
 // An array storing all possible orientations of all possible tiles
@@ -70,7 +72,11 @@ vec2 allRotationsShapes[4][4][4] =
 vec4 orange = vec4(1.0, 0.5, 0.0, 1.0); 
 vec4 white  = vec4(1.0, 1.0, 1.0, 1.0);
 vec4 black  = vec4(0.0, 0.0, 0.0, 1.0); 
- 
+vec4   red  = vec4(1.0, 0.0, 0.0, 1.0);
+vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
+vec4 green 	= vec4(0.0, 1.0, 0.0, 1.0);
+vec4   blue = vec4(0.0, 0.0, 1.0, 1.0);
+
 //board[x][y] represents whether the cell (x,y) is occupied
 bool board[10][20]; 
 
@@ -95,14 +101,6 @@ GLuint vboIDs[6]; // Two Vertex Buffer Objects for each VAO (specifying vertex p
 //When the board is to be updated, update the VBO containing the board's vertext color data
 void updateBoard()
 {
-	for (int i=0;i<20;i++) {
-		for (int j=0;j<10;j++) {
-			for (int k=0;k<6;k++) {
-				if(board[j][i]==true)  boardcolours[6*(10*i+j)+k] = orange;
-				else boardcolours[6*(10*i+j)+k] = black;
-			}
-		}
-	}
 	glBindBuffer(GL_ARRAY_BUFFER, vboIDs[3]); // Bind the VBO containing current board vertex colours
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(boardcolours), boardcolours); // Put the colour data in the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -155,15 +153,33 @@ void newtile()
 
 	// Update the geometry VBO of current tile
 	r_type = rand() % 4;
-	cout << r_type << endl;
 	for (int i = 0; i < 4; i++)
 		tile[i] = allRotationsShapes[r_type][state][i]; // Get the 4 pieces of the new tile
 	updatetile(); 
 
 	// Update the color VBO of current tile
 	vec4 newcolours[24];
-	for (int i = 0; i < 24; i++)
-		newcolours[i] = orange; // You should randomlize the color
+	for (int i=0;i<4;i++) {
+		r_colour = rand()%4;
+		switch(r_colour) {
+			case 0:
+				tilecolour[i] = white;
+				break;
+			case 1:
+				tilecolour[i] = red;
+				break;
+			case 2:
+				tilecolour[i] = green;
+				break;
+			case 3:
+				tilecolour[i] = blue;
+				break;
+		}
+		for (int j=0;j<6;j++) {
+			newcolours[6*i+j] = tilecolour[i];
+		}
+	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, vboIDs[5]); // Bind the VBO containing current tile vertex colours
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(newcolours), newcolours); // Put the colour data in the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -328,7 +344,7 @@ void rotate(int direction)
     }
     if(i==4) {
       state = (state+direction)%4;
-      cout << state << endl;
+//      cout << state << endl;
       for(int j=0;j<4;j++) {
 	tile[j].x =  allRotationsShapes[r_type][state][j].x;
 	tile[j].y =  allRotationsShapes[r_type][state][j].y;
@@ -344,18 +360,20 @@ void rotate(int direction)
 // If every cell in the row is occupied, it will clear that cell and everything above it will shift down one row
 void checkfullrow(int row)
 {
-    cout << "row:" <<row<<endl;
+//    cout << "row:" <<row<<endl;
     int i;
     for(i=0;i<10;i++) if(!board[i][row]) break;
     if(i==10) {
 		linecounter ++;
-        cout<< "full!"<<endl;
+//        cout<< "full!"<<endl;
         for(int j=0;j<10;j++) board[j][row]=false;
         for(int j=0;j<10;j++) {
             for(int k=row; k<19;k++) {
                 board[j][k] = board[j][k+1];
+				for (int l=0;l<6;l++) boardcolours[6*(10*k+j)+l]=boardcolours[6*(10*(k+1)+j)+l];
             }
             board[j][19] = false;
+			for(int l=0;l<6;l++) boardcolours[6*(10*19+j)+l] = black;
         }
     }
     //falling down
@@ -382,14 +400,16 @@ void settle()
 {
 	for (int i=0;i<4;i++) {
         board[int(tilepos.x+tile[i].x)][int(tilepos.y+tile[i].y)] = true;
+//		cout << tilecolour[i] << endl;
+		for (int j=0;j<6;j++) {
+			boardcolours[6 * (10 * int(tilepos.y + tile[i].y) + int(tilepos.x + tile[i].x)) + j] = tilecolour[i];
+		}
     }
+	updateBoard();
     for (int i=0;i<4;i++) {
         checkfullrow(tilepos.y+tile[i].y);
 		updateBoard();
     }
-
-
-
     newtile();
 }
 
