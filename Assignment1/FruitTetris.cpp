@@ -33,7 +33,7 @@ unsigned linecounter = 0; //counting the number of full lines
 vec2 tile[4]; // An array of 4 2d vectors representing displacement from a 'center' piece of the tile, on the grid
 vec4 tilecolour[4];
 vec2 tilepos = vec2(5, 19); // The position of the current tile using grid coordinates ((0,0) is the bottom left corner)
-
+bool removetable[10][20]; //tiles to remove each time
 // An array storing all possible orientations of all possible tiles
 // The 'tile' array will always be some element [i][j] of this array (an array of vec2)
 //L, S, T, I
@@ -365,19 +365,135 @@ void checkfullrow(int row)
     if(i==10) {
 		linecounter ++;
 //        cout<< "full!"<<endl;
-        for(int j=0;j<10;j++) board[j][row]=false;
-        for(int j=0;j<10;j++) {
-            for(int k=row; k<19;k++) {
-                board[j][k] = board[j][k+1];
-				for (int l=0;l<6;l++) boardcolours[6*(10*k+j)+l]=boardcolours[6*(10*(k+1)+j)+l];
-            }
-            board[j][19] = false;
-			for(int l=0;l<6;l++) boardcolours[6*(10*19+j)+l] = black;
-        }
+        for(int j=0;j<10;j++) removetable[j][row]=true;
+//        for(int j=0;j<10;j++) {
+//            for(int k=row; k<19;k++) {
+//                board[j][k] = board[j][k+1];
+//				for (int l=0;l<6;l++) boardcolours[6*(10*k+j)+l]=boardcolours[6*(10*(k+1)+j)+l];
+//            }
+//            board[j][19] = false;
+//			for(int l=0;l<6;l++) boardcolours[6*(10*19+j)+l] = black;
+//        }
     }
 
 }
+//-------------------------------------------------------------------------------------------------------------------
+bool comparecolour(vec4& a, vec4& b) {
+	if(a.x==b.x && a.y==b.y && a.z==b.z && a.w==b.w) return true;
+	else return false;
 
+}
+void checkcolour(int x, int y) {
+	if(comparecolour(boardcolours[6*(10*y+x)],black)) return;
+	int d_up=0, d_down=0;
+	int d_left = 0, d_right=0;
+	int d_dia_lu = 0, d_dia_rd=0;
+	int d_dia_ld = 0, d_dia_ru=0;
+	// up and down directions
+	while(y+d_up+1<=19&&comparecolour(boardcolours[6*(10*(y+d_up+1)+x)],boardcolours[6*(10*y+x)])) d_up++;
+	while(y-d_down-1>=0&&comparecolour(boardcolours[6*(10*(y-d_down-1)+x)],boardcolours[6*(10*y+x)])) d_down++;
+
+	//left and right directions
+	while(x+d_right+1<=9 && comparecolour(boardcolours[6*(10*y+x+d_right+1)],boardcolours[6*(10*y+x)])) d_right++;
+	while(x-d_left-1>=0 && comparecolour(boardcolours[6*(10*y+x-d_left-1)],boardcolours[6*(10*y+x)])) d_left++;
+
+	//left up to right down diagonal
+	while(x-d_dia_lu-1>=0&&y+d_dia_lu+1<=19&&comparecolour(boardcolours[6*(10*(y+d_dia_lu+1)+(x-d_dia_lu-1))],boardcolours[6*(10*y+x)])) d_dia_lu++;
+	while(x+d_dia_rd+1<=9&&y-d_dia_rd-1>=0&&comparecolour(boardcolours[6*(10*(y-d_dia_rd-1)+(x+d_dia_rd+1))],boardcolours[6*(10*y+x)])) d_dia_rd++;
+
+	//left down to right up diagonal
+	while(x-d_dia_ld-1>=0 && y-d_dia_ld-1>=0 && comparecolour(boardcolours[6*(10*(y-d_dia_ld-1)+(x-d_dia_ld-1))],boardcolours[6*(10*y+x)])) d_dia_ld++;
+	while(x+d_dia_ru+1<=9 && y+d_dia_ru+1<=19 && comparecolour(boardcolours[6*(10*(y+d_dia_ru+1)+(x+d_dia_ru+1))],boardcolours[6*(10*y+x)])) d_dia_ru++;
+	cout << "x:" << x << endl;
+	cout << "y:" << y << endl;
+	if(d_up+d_down<2&&d_left+d_right<2&&d_dia_lu+d_dia_rd<2&&d_dia_ld+d_dia_ru<2) return;
+	else {
+		removetable[x][y] = true;
+		if(d_up+d_down>=2) {
+			cout << "up and down:"<< d_up << ";" << d_down << endl;
+			for (int i=1;i<=d_up;i++) removetable[x][y+i] = true;
+			for (int i=1;i<=d_down;i++) removetable[x][y-i] = true;
+		}
+		if(d_left+d_right>=2) {
+			cout << "left and right:"<< d_left << ";" << d_right << endl;
+			for (int i=1;i<=d_left;i++) removetable[x-i][y] = true;
+			for (int i=1;i<=d_right;i++) removetable[x+i][y] = true;
+
+		}
+		if(d_dia_lu+d_dia_rd>=2) {
+			cout << "left_up and right_down:"<< d_dia_lu << ";" << d_dia_rd << endl;
+			for (int i=1;i<=d_dia_lu;i++) removetable[x-i][y+i] = true;
+			for (int i=1;i<=d_dia_rd;i++) removetable[x+i][y-i] = true;
+
+		}
+		if(d_dia_ru+d_dia_ld>=2) {
+			cout << "right up and left down:"<< d_dia_ru << ";" << d_dia_ld << endl;
+			for (int i=1;i<=d_dia_ru;i++) removetable[x+i][y+i] = true;
+			for (int i=1;i<=d_dia_ld;i++) removetable[x-i][y-i] = true;
+
+		}
+	}
+}
+//-------------------------------------------------------------------------------------------------------------------
+
+// Starts the game over - empties the board, creates new tiles, resets line counters
+void restart()
+{
+	linecounter = 0;
+	for(int i=0;i<10;i++) {
+		for(int j=0;j<20;j++) {
+			board[i][j] = false;
+		}
+		for(int j=0;j<1200;j++) {
+			boardcolours[j] = black;
+		}
+		updateBoard();
+	}
+	newtile();
+
+}
+//-------------------------------------------------------------------------------------------------------------------
+void clearremovetable() {
+	for (int i=0;i<10;i++) {
+		for (int j=0;j<20;j++) {
+			removetable[i][j] = false;
+		}
+	}
+}
+void moveboard(int from_x, int from_y, int to_x, int to_y) {
+	if(to_x<=9&&to_x>=0&&to_y<=19&&to_y>=0) {
+		if(from_x<=9&&from_x>=0&&from_y<=19&&from_y>=0) {
+			for (int k=0;k<6;k++) {
+				boardcolours[6*(10*(to_y)+to_x)+k] = boardcolours[6*(10*(from_y)+from_x)+k];
+				board[to_x][to_y] = board[from_x][from_y];
+			}
+		}
+		else {
+			for (int k=0;k<6;k++) {
+				boardcolours[6*(10*to_y+to_x)+k] = black;
+				board[to_x][to_y] = false;
+			}
+		}
+	}
+
+}
+void executeremovetable() {
+	for(int i=0;i<10;i++) {
+		int count = 0;
+		for (int j=0;j<20;j++) {
+			if(removetable[i][j]==true) count ++;
+			else {
+				moveboard(i,j,i,j-count);
+			}
+		}
+		for (int j=count;j>0;j--) {
+			for (int k=0;k<6;k++) {
+				boardcolours[6*(10*(20-j)+i)+k] = black;
+				board[i][20-j] = false;
+			}
+		}
+	}
+}
 //-------------------------------------------------------------------------------------------------------------------
 
 // Places the current tile - update the board vertex colour VBO and the array maintaining occupied cells
@@ -390,11 +506,21 @@ void settle()
 			boardcolours[6 * (10 * int(tilepos.y + tile[i].y) + int(tilepos.x + tile[i].x)) + j] = tilecolour[i];
 		}
     }
+	cout << "settled:update Board" <<endl;
 	updateBoard();
+	cout << "clear removetable" << endl;
+	clearremovetable();
     for (int i=0;i<4;i++) {
         checkfullrow(tilepos.y+tile[i].y);
-		updateBoard();
     }
+	for (int i=0;i<4;i++) {
+		for (int j=0;j<10;j++) {
+			checkcolour(j,tilepos.y+tile[i].y);
+		}
+	}
+	executeremovetable();
+	clearremovetable();
+	updateBoard();
 	int i;
 	for (i=0;i<10;i++) {
 		if(board[i][19]) break;
@@ -425,21 +551,7 @@ bool movetile(vec2 direction)
     }
 	return false;
 }
-//-------------------------------------------------------------------------------------------------------------------
 
-// Starts the game over - empties the board, creates new tiles, resets line counters
-void restart()
-{
-	linecounter = 0;
-	for(int i=0;i<10;i++) {
-		for(int j=0;j<20;j++) {
-			board[i][j] = false;
-		}
-		updateBoard();
-	}
-	newtile();
-
-}
 //-------------------------------------------------------------------------------------------------------------------
 
 // Draws the game
