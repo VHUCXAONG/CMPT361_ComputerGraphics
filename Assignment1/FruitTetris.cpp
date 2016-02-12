@@ -23,7 +23,7 @@ using namespace std;
 
 
 // xsize and ysize represent the window size - updated if window is reshaped to prevent stretching of the game
-int xsize = 400; 
+int xsize = 400;
 int ysize = 720;
 int r_type; //random number for current tile type
 int r_colour; //random number for current block colour
@@ -44,7 +44,6 @@ vec2 allRotationsShapes[6][4][4] =
 			{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, -1)},
 			{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(1,  1)},
 			{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 1)}
-
 
 	},
 	{
@@ -459,6 +458,7 @@ bool checkcolour(int x, int y) {
 // Starts the game over - empties the board, creates new tiles, resets line counters
 void restart()
 {
+
 	linecounter = 0;
 	for(int i=0;i<10;i++) {
 		for(int j=0;j<20;j++) {
@@ -469,6 +469,7 @@ void restart()
 		}
 		updateBoard();
 	}
+
 	newtile();
 
 }
@@ -677,7 +678,7 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(xsize, ysize);
-	glutInitWindowPosition(680, 178); // Center the game window (well, on a 1920x1080 display)
+	glutInitWindowPosition(680, 200); // Center the game window (well, on a 1920x1080 display)
 	glutCreateWindow("Fruit Tetris");
 	glewInit();
 	init();

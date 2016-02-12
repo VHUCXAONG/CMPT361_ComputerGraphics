@@ -17,7 +17,8 @@ void main()
 	// First, center the image by translating each vertex by half of the original window size
 	// Then, multiply by the scale matrix to maintain size after the window is reshaped
 	vec4 newPos = vPosition + vec4(-200, -360, 0, 0);
-	gl_Position = scale * newPos; 
+	//newPos = newPos + vec4(-0.2*xsize, 0, 0, 0);
+	gl_Position = scale * newPos;
 
 	color = vColor;	
 } 
