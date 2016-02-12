@@ -76,7 +76,7 @@ vec4   red  = vec4(1.0, 0.0, 0.0, 1.0);
 vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
 vec4 green 	= vec4(0.0, 1.0, 0.0, 1.0);
 vec4   blue = vec4(0.0, 0.0, 1.0, 1.0);
-
+vec4 purple = vec4(1.0,0.0,1.0,1.0);
 //board[x][y] represents whether the cell (x,y) is occupied
 bool board[10][20]; 
 
@@ -160,19 +160,22 @@ void newtile()
 	// Update the color VBO of current tile
 	vec4 newcolours[24];
 	for (int i=0;i<4;i++) {
-		r_colour = rand()%4;
+		r_colour = rand()%5;
 		switch(r_colour) {
 			case 0:
-				tilecolour[i] = white;
+				tilecolour[i] = orange;
 				break;
 			case 1:
-				tilecolour[i] = red;
-				break;
-			case 2:
 				tilecolour[i] = green;
 				break;
+			case 2:
+				tilecolour[i] = yellow;
+				break;
 			case 3:
-				tilecolour[i] = blue;
+				tilecolour[i] = red;
+				break;
+			case 4:
+				tilecolour[i] = purple;
 				break;
 		}
 		for (int j=0;j<6;j++) {
