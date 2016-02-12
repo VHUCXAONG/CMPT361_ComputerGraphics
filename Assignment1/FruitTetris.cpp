@@ -36,35 +36,51 @@ vec2 tilepos = vec2(5, 19); // The position of the current tile using grid coord
 bool removetable[10][20]; //tiles to remove each time
 // An array storing all possible orientations of all possible tiles
 // The 'tile' array will always be some element [i][j] of this array (an array of vec2)
-//L, S, T, I
-vec2 allRotationsShapes[4][4][4] = 
+//L, mirror L, S, mirror S, T, I
+vec2 allRotationsShapes[6][4][4] =
 {
 	{
-	{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(-1,-1)},
-	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 1)},
-	{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(1,  1)},
-	{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, -1)}
+			{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(-1,-1)},
+			{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, -1)},
+			{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(1,  1)},
+			{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 1)}
+
+
+	},
+	{
+			{vec2(0,0),vec2(0,1),vec2(0,-1),vec2(-1,-1)},
+			{vec2(0,0),vec2(-1,0),vec2(1,0),vec2(1,-1)},
+			{vec2(0,0),vec2(0,-1),vec2(0,1),vec2(1,1)},
+			{vec2(0,0),vec2(1,0),vec2(-1,0),vec2(-1,1)}
 	},
 
 	{
-	{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
-	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, -1)},
-	{vec2(0, 0), vec2(1,0), vec2(0, 1), vec2(-1,1)},
-	{vec2(0, 0), vec2(0, -1), vec2(1,0), vec2(1, 1)}
+			{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
+			{vec2(0, 0), vec2(0, -1), vec2(1,0), vec2(1, 1)},
+			{vec2(0, 0), vec2(-1,0), vec2(0, -1), vec2(1,-1)},
+			{vec2(0, 0), vec2(0, -1), vec2(1,0), vec2(1, 1)}
+	},
+	{
+			{vec2(0,0),vec2(1,0),vec2(0,-1),vec2(-1,-1)},
+			{vec2(0,0),vec2(0,1),vec2(1,0),vec2(1,-1)},
+			{vec2(0,0),vec2(1,0),vec2(0,-1),vec2(-1,-1)},
+			{vec2(0,0),vec2(0,1),vec2(1,0),vec2(1,-1)}
 	},
 
 	{
-	{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(0, -1)},
-	{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 0)},
-	{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(0,  1)},
-	{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, 0)}
+			{vec2(0, 0), vec2(-1,0), vec2(1, 0), vec2(0, -1)},
+			{vec2(0,0), vec2(0, -1), vec2(0, 1), vec2(1, 0)},
+			{vec2(0, 0), vec2(1,0), vec2(-1, 0), vec2(0,  1)},
+			{vec2(0, 0), vec2(0, 1), vec2(0,-1), vec2(-1, 0)},
+
+
 	},
 
 	{
-	{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
-	{vec2(0, 2), vec2(0, 1), vec2(0,0), vec2(0, -1)},
-	{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
-	{vec2(0, 2), vec2(0, 1), vec2(0,0), vec2(0, -1)}
+			{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
+			{vec2(0, -2), vec2(0, -1), vec2(0,0), vec2(0, 1)},
+			{vec2(-2, 0), vec2(-1,0), vec2(0, 0), vec2(1,0)},
+			{vec2(0, -2), vec2(0, -1), vec2(0,0), vec2(0, 1)},
 	}
 };
 
@@ -152,7 +168,7 @@ void newtile()
 	state = 0;
 
 	// Update the geometry VBO of current tile
-	r_type = rand() % 4;
+	r_type = rand() % 6;
 	for (int i = 0; i < 4; i++)
 		tile[i] = allRotationsShapes[r_type][state][i]; // Get the 4 pieces of the new tile
 	updatetile(); 
