@@ -383,8 +383,8 @@ bool comparecolour(vec4& a, vec4& b) {
 	else return false;
 
 }
-void checkcolour(int x, int y) {
-	if(comparecolour(boardcolours[6*(10*y+x)],black)) return;
+bool checkcolour(int x, int y) {
+	if(comparecolour(boardcolours[6*(10*y+x)],black)) return false;
 	int d_up=0, d_down=0;
 	int d_left = 0, d_right=0;
 	int d_dia_lu = 0, d_dia_rd=0;
@@ -406,7 +406,7 @@ void checkcolour(int x, int y) {
 	while(x+d_dia_ru+1<=9 && y+d_dia_ru+1<=19 && comparecolour(boardcolours[6*(10*(y+d_dia_ru+1)+(x+d_dia_ru+1))],boardcolours[6*(10*y+x)])) d_dia_ru++;
 	cout << "x:" << x << endl;
 	cout << "y:" << y << endl;
-	if(d_up+d_down<2&&d_left+d_right<2&&d_dia_lu+d_dia_rd<2&&d_dia_ld+d_dia_ru<2) return;
+	if(d_up+d_down<2&&d_left+d_right<2&&d_dia_lu+d_dia_rd<2&&d_dia_ld+d_dia_ru<2) return false;
 	else {
 		removetable[x][y] = true;
 		if(d_up+d_down>=2) {
@@ -433,6 +433,7 @@ void checkcolour(int x, int y) {
 
 		}
 	}
+	return true;
 }
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -493,6 +494,14 @@ void executeremovetable() {
 			}
 		}
 	}
+	clearremovetable();
+	int flag=0;
+	for(int i=0;i<10;i++) {
+		for(int j=0;j<20;j++) {
+			if(checkcolour(i,j)==true) flag ++;
+		}
+	}
+	if(flag!=0) executeremovetable();
 }
 //-------------------------------------------------------------------------------------------------------------------
 
