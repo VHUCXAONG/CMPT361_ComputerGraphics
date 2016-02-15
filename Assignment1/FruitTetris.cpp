@@ -19,8 +19,6 @@ Modified in Sep 2014 by Honghua Li (honghual@sfu.ca).
 #include <iostream>
 
 using namespace std;
-
-
 // xsize and ysize represent the window size - updated if window is reshaped to prevent stretching of the game
 int xsize = 400;
 int ysize = 720;
@@ -33,9 +31,9 @@ unsigned linecounter = 0; //counting the number of full lines
 vec2 tile[4]; // An array of 4 2d vectors representing displacement from a 'center' piece of the tile, on the grid
 vec4 tilecolour[4]; //colour of each block of the current tile
 vec2 tilepos = vec2(5, 19); // The position of the current tile using grid coordinates ((0,0) is the bottom left corner)
-
 bool removetable[10][20]; //record tiles to remove after each time's check
 
+bool pause = false;
 // An array storing all possible orientations of all possible tiles
 // The 'tile' array will always be some element [i][j] of this array (an array of vec2)
 //L, mirror L, S, mirror S, T, I
@@ -618,6 +616,7 @@ bool movetile(vec2 direction) {
 
 // Draws the game
 void display() {
+    if(pause) return;
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -643,6 +642,7 @@ void display() {
 // Reshape callback will simply change xsize and ysize variables, which are passed to the vertex shader
 // to keep the game the same from stretching if the window is stretched
 void reshape(GLsizei w, GLsizei h) {
+    if(pause) return;
     xsize = w;
     ysize = h;
     glViewport(0, 0, w, h);
@@ -652,6 +652,7 @@ void reshape(GLsizei w, GLsizei h) {
 
 // Handle arrow key keypresses
 void special(int key, int x, int y) {
+    if(pause) return;
     switch (key) {
         case GLUT_KEY_LEFT:
             movetile(vec2(-1, 0));
@@ -682,6 +683,9 @@ void keyboard(unsigned char key, int x, int y) {
         case 'r': // 'r' key restarts the game
             restart();
             break;
+        case 'p':
+            pause=!pause;
+            break;
     }
     glutPostRedisplay();
 }
@@ -689,15 +693,18 @@ void keyboard(unsigned char key, int x, int y) {
 //-------------------------------------------------------------------------------------------------------------------
 
 void idle(void) {
+    if(pause) return;
     glutPostRedisplay();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
 
 void timer(int value) {
+    glutTimerFunc(300, timer, 10);
+    if(pause) return;
     movetile(vec2(0, -1));
     updatetile();
-    glutTimerFunc(300, timer, 10);
+
 }
 
 //-------------------------------------------------------------------------------------------------------------------
