@@ -60,9 +60,9 @@ The compiling process is straightforward, simply run <code>make</code> command u
  	1. <code>bool movetile(vec2 direction);</code> which moves the current tile towards the direction specified by the vector, the movements are executed after collision checks and crossing boundary checks, and then a new tile would be generated.
  	2. <code>void rotate(int direction)</code>, the direction is either 1 or -1, which respectively denotes counterclockwise rotation or clockwise rotation, the rotations would be executed after collision checks and cross boundary checks.
  
-4. Additional Game Logic
+4. **Additional Game Logic**
   1. Checking fullrow is done by the function <code>void checkfullrow(int row)</code>. This functions is executed each time when a new tile is settled, which checks all the rows involved due to this settlement, and label all the rows that are full.
   2. Checking consecutive same coloured patterns is done by the function <code> bool checkcolour(int x, int y) </code>, this functions checks all the possible patterns around coordinate (x,y), and then mark the coordinates which should be removed. One thing to note is that new consecutive patterns may be caused by such removals, and therefore we should check all the involved blocks after the removal till there are no such patterns exist.
 
-5. Additional features
+5. **Additional features**
   1. **Pause Game**: Press <code>p</code> the game would be stopped. The original skeleton did not give a function to pause the game, but we can modify the callback functions, which are called in the main loop. When we press <code>p</code>, one state variable is changed (negated). If it is in pause state, all call back functions return immediately without processing anything, and the Game is therefore paused, until <code>p</code> is pressed again.
