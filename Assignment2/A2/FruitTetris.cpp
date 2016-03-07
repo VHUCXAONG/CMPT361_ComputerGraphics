@@ -26,12 +26,12 @@ bool removetable[10][20]; //tiles to remove each time
 GLuint model_view;
 GLuint projection;
 
-GLfloat radius = 10;
+GLfloat radius = 1;
 GLfloat theta = 0.0;
 GLfloat phi = 0.0;
 
-GLfloat  b_left = 0.0, b_right = 10.0;
-GLfloat  b_bottom = 0.0, b_top = 20.0;
+GLfloat  b_left = -2.0, b_right = 2.0;
+GLfloat  b_bottom = -3.6, b_top = 3.6;
 GLfloat  zNear = 0.0, zFar = 50.0;
 const GLfloat  dr = 5.0 * DegreesToRadians;
 vec2 allRotationsShapes[6][4][4] =
@@ -234,30 +234,30 @@ void initGrid()
 	vec4 gridcolours[590]; // One colour per vertex
 	// Vertical lines 
 	for (int i = 0; i < 11; i++){
-		gridpoints[2*i] = vec4(33.0 + 33.0 * i-33.0, 33.0-33.0, 0, 1);
-		gridpoints[2*i + 1] = vec4(33.0 + 33.0 * i-33.0, 693.0-33.0, 0, 1);
+		gridpoints[2*i] = vec4(33.0 + 33.0 * i-33.0-165.0, 33.0-33.0-330, 0, 1);
+		gridpoints[2*i + 1] = vec4(33.0 + 33.0 * i-33.0-165.0, 693.0-33.0-330, 0, 1);
 		
 	}
 	for (int i=0; i<11; i++) {
-		gridpoints[22+i*2] = vec4(33.0+33.0*i-33.0, 33.0-33.0, 33.0, 1);
-		gridpoints[22+i*2 + 1] = vec4(33.0+33.0*i-33.0, 693.0-33.0, 33.0, 1);
+		gridpoints[22+i*2] = vec4(33.0+33.0*i-33.0-165.0, 33.0-33.0-330.0, 33.0, 1);
+		gridpoints[22+i*2 + 1] = vec4(33.0+33.0*i-33.0-165.0, 693.0-33.0-330.0, 33.0, 1);
 
 	}
 	// Horizontal lines
 	for (int i = 0; i < 21; i++){
-		gridpoints[44 + 2*i] = vec4(33.0-33.0, 33.0 + 33.0 * i-33.0, 0, 1);
-		gridpoints[44 + 2*i + 1] = vec4(363.0-33.0, 33.0 + 33.0 * i-33.0, 0, 1);
+		gridpoints[44 + 2*i] = vec4(33.0-33.0-165.0, 33.0 + 33.0 * i-33.0-330.0, 0, 1);
+		gridpoints[44 + 2*i + 1] = vec4(363.0-33.0-165.0, 33.0 + 33.0 * i-33.0-330.0, 0, 1);
 	}
 	for (int i = 0; i < 21; i++) {
-		gridpoints[86 + 2*i ] = vec4(33.0-33.0, 33.0 + 33.0 * i-33.0, 33.0, 1);
-		gridpoints[86 + 2*i + 1] = vec4(363.0-33.0, 33.0 + 33.0 * i-33.0, 33.0, 1);
+		gridpoints[86 + 2*i ] = vec4(33.0-33.0-165, 33.0 + 33.0 * i-33.0-330, 33.0, 1);
+		gridpoints[86 + 2*i + 1] = vec4(363.0-33.0-165, 33.0 + 33.0 * i-33.0-330, 33.0, 1);
 	}
 
 	//z-directional lines
 	for (int i=0;i<11;i++) {
 		for (int j=0;j<21;j++) {
-			gridpoints[128+ 2*(21*i+j)] = vec4(33.0+33.0*i-33.0, 33.0 +33.0*j-33.0, 0, 1);
-			gridpoints[128+ 2*(21*i+j)+1] = vec4(33.0+33.0*i-33.0, 33.0 +33.0*j-33.0, 33.0, 1); 
+			gridpoints[128+ 2*(21*i+j)] = vec4(33.0+33.0*i-33.0-165, 33.0 +33.0*j-33.0-330, 0, 1);
+			gridpoints[128+ 2*(21*i+j)+1] = vec4(33.0+33.0*i-33.0-165, 33.0 +33.0*j-33.0-330, 33.0, 1); 
 
 			
 		}
@@ -637,7 +637,7 @@ void display()
 	//	 radius * sin(theta) * sin(phi),
 	//	 radius * cos(theta),
 	//	 1.0 );
-	vec4 eye(radius*sin(theta), 0, radius*cos(theta),1.0);
+	vec4 eye(radius*sin(theta), 0.0, radius*cos(theta),1.0);
 	//vec4  eye( 0.0, 0.0, 2.0,1.0 );
 	//vec4 	eye(0.0,0.0,2.0,1.0);
     	vec4  	at( 0.0, 0.0, 0.0, 1.0 );
@@ -707,17 +707,17 @@ void keyboard(unsigned char key, int x, int y)
 		case 'q':
 			exit (EXIT_SUCCESS);
 			break;
-		case 'r': // 'r' key restarts the game
-			restart();
-			break;
+		//case 'r': // 'r' key restarts the game
+		//	restart();
+		//	break;
 		case 'x': b_left *= 1.1; b_right *= 1.1; break;
 		case 'X': b_left *= 0.9; b_right *= 0.9; break;
 		case 'y': b_bottom *= 1.1; b_top *= 1.1; break;
 		case 'Y': b_bottom *= 0.9; b_top *= 0.9; break;
 		case 'z': zNear  *= 1.1; zFar *= 1.1; break;
 		case 'Z': zNear *= 0.9; zFar *= 0.9; break;
-		//case 'r': radius *= 2.0; break;
-		//case 'R': radius *= 0.5; break;
+		case 'r': radius *= 2.0; break;
+		case 'R': radius *= 0.5; break;
 		case 'o': theta += dr; break;
 		case 'O': theta -= dr; break;
 		case 'p': phi += dr; break;

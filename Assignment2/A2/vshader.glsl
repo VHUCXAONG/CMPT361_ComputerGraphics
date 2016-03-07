@@ -11,9 +11,9 @@ uniform mat4 projection;
 
 void main() 
 {
-	mat4 scale = mat4(2.0/330, 	0.0, 		0.0, 0.0,
-			  0.0,  	2.0/660, 	0.0, 0.0,
-			  0.0, 		0.0, 		2.0/330, 0.0,
+	mat4 scale = mat4(1.0/xsize, 	0.0, 		0.0, 0.0,
+			  0.0,  	1.0/ysize, 	0.0, 0.0,
+			  0.0, 		0.0, 		1.0/xsize, 0.0,
 			  0.0, 		0.0, 		0.0, 1.0 );
 	mat4 halfscale = mat4(1.0/xsize, 	0.0, 		0.0, 0.0,
 			  0.0,  	1.0/ysize, 	0.0, 0.0,
@@ -23,8 +23,8 @@ void main()
 	
 	// First, center the image by translating each vertex by half of the original window size
 	// Then, multiply by the scale matrix to maintain size after the window is reshaped
-	vec4 newPos = vPosition + vec4(-165, -330, 0, 0);
-	gl_Position = projection * model_view *scale* newPos; 
+	//vec4 newPos = vPosition + vec4(-xsize/2.0, -ysize/2.0, 0, 0);
+	gl_Position = projection * model_view *scale* vPosition; 
 	
 	color = vColor;	
 } 
