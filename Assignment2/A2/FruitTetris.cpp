@@ -30,7 +30,10 @@ GLuint projection;
 
 GLfloat radius = 10;
 GLfloat theta = 0.0;
-GLfloat phi = 0.0;
+GLfloat armlower = 0.0;
+GLfloat armupper = 0.0;
+GLfloat lowerArmLength = 5.0;
+GLfloat upperArmLength = 5.0;
 
 GLfloat  b_left = -9.5, b_right = 9.5; 
 GLfloat  b_bottom = -12, b_top = 12;
@@ -85,7 +88,7 @@ vec2 allRotationsShapes[6][4][4] =
 // colors
 vec4 orange = vec4(1.0, 0.5, 0.0, 1.0); 
 vec4 white  = vec4(1.0, 1.0, 1.0, 1.0);
-vec4 black  = vec4(0.0, 0.0, 0.0, 1.0); 
+vec4 black  = vec4(0.0, 0.0, 0.0, 0.0); 
 vec4   red  = vec4(1.0, 0.0, 0.0, 1.0);
 vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
 vec4 green 	= vec4(0.0, 1.0, 0.0, 1.0);
@@ -197,10 +200,10 @@ void updatetile()
 //-----------------------------------------------------------------------------------------------------
 //update robot arm
 void updateArm() {
-	if(hold) {
-		vec2 head = vec2(tilepos.x-5, tilepos.y-10);
-		vec2 joint = vec2(tilepos.x-10,0);
+	//if(hold) {
 		vec2 tail = vec2(-8,-10);
+		vec2 joint = vec2(lowerArmLength*cos(armlower), lowerArmLength*sin(armlower));
+		vec2 head = vec2(upperArmLength*cos(armupper), upperArmLength*sin(armupper));
 		vec4 p1[8] = {
 			vec4(tail.x*33.0, tail.y*33.0, 16.5, 1.0),
 			vec4(tail.x*33.0, 33.0+tail.y*33.0, 16.5, 1.0),
@@ -246,7 +249,7 @@ void updateArm() {
 		glBindVertexArray(0);
 
 
-	}
+	//}
 }
 //-------------------------------------------------------------------------------------------------------------------
 
@@ -441,14 +444,14 @@ void initArm() {
 	glVertexAttribPointer(vPosition, 4, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(vPosition);
 	vec4 p[8] = {
-		vec4(-11*33, -10*33, 16.5, 1.0),
-		vec4(-11*33, -9*33, 16.5, 1.0),
-		vec4(-7*33, -10*33, 16.5, 1.0),
-		vec4(-7*33, -9*33, 16.5,1.0),
-		vec4(-11*33, -10*33, -16.5, 1.0),
-		vec4(-11*33, -9*33, -16.5, 1.0),
-		vec4(-7*33, -10*33, -16.5, 1.0),
-		vec4(-7*33, -9*33, -16.5,1.0),
+		vec4(-11*33, -10*33, 66+16.5, 1.0),
+		vec4(-11*33, -9*33, 66+16.5, 1.0),
+		vec4(-7*33, -10*33, 66+16.5, 1.0),
+		vec4(-7*33, -9*33, 66+16.5,1.0),
+		vec4(-11*33, -10*33, -66-16.5, 1.0),
+		vec4(-11*33, -9*33, -66-16.5, 1.0),
+		vec4(-7*33, -10*33, -66-16.5, 1.0),
+		vec4(-7*33, -9*33, -66-16.5,1.0),
 	};
 	vec4 basepoints[36];
 	addvertex(basepoints,p, 0, 0, 0, 0, 1, 2, 3);
@@ -794,10 +797,6 @@ void display()
 	glUniform1i(locxsize, xsize); // x and y sizes are passed to the shader program to maintain shape of the vertices on screen
 	glUniform1i(locysize, ysize);
 	// set up viewing transformation
-    	//vec4  eye( radius*sin(theta)*cos(phi),
-	//	 radius * sin(theta) * sin(phi),
-	//	 radius * cos(theta),
-	//	 1.0 );
 	vec4 eye(radius*sin(theta), 10, radius*cos(theta),1.0);
 	//vec4  eye( 0.0, 0.0, 2.0,1.0 );
 	//vec4 	eye(0.0,0.0,2.0,1.0);
@@ -846,12 +845,17 @@ void reshape(GLsizei w, GLsizei h)
 // Handle arrow key keypresses
 void special(int key, int x, int y)
 {
+    int mod = glutGetModifiers();
+    bool ctrl = false;
+    if(mod==GLUT_ACTIVE_CTRL) ctrl = true;
     switch(key) {
         case GLUT_KEY_LEFT:
-	    movetile(vec2(-1,0));
+	    if(ctrl) theta += dr; 
+	    else movetile(vec2(-1,0));
 	    break;
 	case GLUT_KEY_RIGHT:
-	    movetile(vec2(1,0));
+	    if(ctrl) theta -=dr;		
+	    else movetile(vec2(1,0));
 	    break;
 	case GLUT_KEY_DOWN:
 	    movetile(vec2(0,-1));
@@ -884,23 +888,22 @@ void keyboard(unsigned char key, int x, int y)
 		case 'q':
 			exit (EXIT_SUCCESS);
 			break;
-		//case 'r': // 'r' key restarts the game
-		//	restart();
-		//	break;
+		case 'z': // 'r' key restarts the game
+			restart();
+			break;
 		case 'x': b_left *= 1.1; b_right *= 1.1; break;
 		case 'X': b_left *= 0.9; b_right *= 0.9; break;
 		case 'y': b_bottom *= 1.1; b_top *= 1.1; break;
 		case 'Y': b_bottom *= 0.9; b_top *= 0.9; break;
-		case 'z': zNear  *= 1.1; zFar *= 1.1; break;
-		case 'Z': zNear *= 0.9; zFar *= 0.9; break;
-		case 'r': radius *= 2.0; break;
-		case 'R': radius *= 0.5; break;
 		case 'o': theta += dr; break;
 		case 'O': theta -= dr; break;
-		case 'p': phi += dr; break;
-		case 'P': phi -= dr; break;
+		case 'a': armlower -= dr;break;
+		case 'd': armlower += dr;break;
+		case 's': armupper -= dr;break;
+		case 'w': armupper += dr;break;
 
 	}
+	updateArm();
 	glutPostRedisplay();
 }
 
@@ -918,7 +921,7 @@ void timer(int value) {
 		movetile(vec2(0,-1));
 		updatetile();
 	}
-	glutTimerFunc(100,timer,10);
+	glutTimerFunc(300,timer,10);
 }
 //------------------------------------------------------------------------------------------------------------------
 void timer2(int value) {
@@ -948,6 +951,8 @@ int main(int argc, char **argv)
 	glutInitWindowSize(xsize, ysize);
 	glutInitWindowPosition(680, 200); // Center the game window (well, on a 1920x1080 display)
 	glutCreateWindow("Fruit Tetris");
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glewInit();
 	init();
 
