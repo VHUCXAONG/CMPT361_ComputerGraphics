@@ -4,12 +4,14 @@
 #include "include/Angel.h"
 #include <cstdlib>
 #include <iostream>
+#include <math.h>
+#include <string.h>
 
 using namespace std;
 
 
 // xsize and ysize represent the window size - updated if window is reshaped to prevent stretching of the game
-int xsize = 495;
+int xsize = 550;
 int ysize = 660;
 int r_type; //random number for current tile type
 int r_colour; //random number for current block colour
@@ -27,15 +29,19 @@ bool removetable[10][20]; //tiles to remove each time
 //L, mirror L, S, mirror S, T, I
 GLuint model_view;
 GLuint projection;
+//component of the robotic arm
+vec2 tail = vec2(-7,-10);
+vec2 joint;
+vec2 head;
 
 GLfloat radius = 10;
 GLfloat theta = 0.0;
-GLfloat armlower = 0.0;
-GLfloat armupper = 0.0;
-GLfloat lowerArmLength = 5.0;
-GLfloat upperArmLength = 5.0;
+GLfloat armlower = 1.68;
+GLfloat armupper = 0.68;
+GLfloat lowerArmLength = 11.3;
+GLfloat upperArmLength = 11.3;
 
-GLfloat  b_left = -9.5, b_right = 9.5; 
+GLfloat  b_left = -10.5, b_right = 8.5; 
 GLfloat  b_bottom = -12, b_top = 12;
 GLfloat  zNear = 0.0, zFar = 50.0;
 const GLfloat  dr = 5.0 * DegreesToRadians;
@@ -86,15 +92,15 @@ vec2 allRotationsShapes[6][4][4] =
 };
 
 // colors
-vec4 orange = vec4(1.0, 0.5, 0.0, 1.0); 
-vec4 white  = vec4(1.0, 1.0, 1.0, 1.0);
+vec4 orange = vec4(1.0, 0.5, 0.0, 0.8); 
+vec4 white  = vec4(1.0, 1.0, 1.0, 0.8);
 vec4 black  = vec4(0.0, 0.0, 0.0, 0.0); 
-vec4   red  = vec4(1.0, 0.0, 0.0, 1.0);
-vec4 yellow = vec4(1.0, 1.0, 0.0, 1.0);
-vec4 green 	= vec4(0.0, 1.0, 0.0, 1.0);
-vec4   blue = vec4(0.0, 0.0, 1.0, 1.0);
-vec4 purple = vec4(1.0,0.0,1.0,1.0);
-vec4 grey = vec4(0.33, 0.33, 0.33,1.0);
+vec4   red  = vec4(1.0, 0.0, 0.0, 0.8);
+vec4 yellow = vec4(1.0, 1.0, 0.0, 0.8);
+vec4 green 	= vec4(0.0, 1.0, 0.0, 0.8);
+vec4   blue = vec4(0.0, 0.0, 1.0, 0.8);
+vec4 purple = vec4(1.0,0.0,1.0,0.8);
+vec4 grey = vec4(0.33, 0.33, 0.33,0.8);
 //board[x][y] represents whether the cell (x,y) is occupied
 bool board[10][20]; 
 
@@ -114,6 +120,17 @@ GLuint locysize;
 // VAO and VBO
 GLuint vaoIDs[6]; // One VAO for each object: the grid, the board, the current piece
 GLuint vboIDs[12]; // Two Vertex Buffer Objects for each VAO (specifying vertex positions and colours, respectively)
+//-------------------------------------------------------------------------------------------------------------------
+// output text on the screen
+void output() {
+    glColor3f(1.0, 1.0, 1.0);
+    glRasterPos2f(10.0, 10.0);
+    char str[2];
+    str[0] = armcount/10 - '0';
+    str[1] = armcount%10 - '0';
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13,str[0]);
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13,str[1]);
+}
 
 //-------------------------------------------------------------------------------------------------------------------
 //When the board is to be updated, update the VBO containing the board's vertext color data
@@ -138,7 +155,25 @@ void addvertex(vec4 *board,vec4 *polygon,int facet, int x, int y, int a, int b, 
 
 
 }
-
+//------------------------------------------------------------------------------------------------------------------
+bool checkoverlap(vec2 center) {
+    int i;
+    for(i=0;i<4;i++) {
+	GLfloat x = tile[i].x + center.x; 
+	GLfloat y = tile[i].y + center.y; 
+	if(board[int(x)][int(y)]==true) return true;
+    }
+    return false;
+}
+bool checkoverborder(vec2 center) {
+    int i;
+    for(i=0;i<4;i++) {
+	GLfloat x = tile[i].x + center.x;
+	GLfloat y = tile[i].y + center.y;
+	if(y<0||x<0||x>=10||y>=20) return true;
+    }
+    return false;
+}
 //-------------------------------------------------------------------------------------------------------------------
 // When the current tile is moved or rotated (or created), update the VBO containing its vertex position data
 void updatetile()
@@ -195,15 +230,43 @@ void updatetile()
 	}
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(updatecolour), updatecolour);
 	glBindVertexArray(0);
-	
+}
+//----------------------------------------------------------------------------------------------------
+//drop current box
+void droptile() {
+	if(hold) {
+		tilepos.x = int(head.x+5);
+		tilepos.y = int(head.y+10);
+		hold = false;
+		updatetile();
+	}
 }
 //-----------------------------------------------------------------------------------------------------
 //update robot arm
-void updateArm() {
+void updateArm(GLfloat deltalower, GLfloat deltaupper) {
 	//if(hold) {
-		vec2 tail = vec2(-8,-10);
-		vec2 joint = vec2(lowerArmLength*cos(armlower), lowerArmLength*sin(armlower));
-		vec2 head = vec2(upperArmLength*cos(armupper), upperArmLength*sin(armupper));
+		vec2 temp_joint = vec2(tail.x+lowerArmLength*cos(deltalower + armlower), tail.y+lowerArmLength*sin(deltalower + armlower));
+		vec2 temp_head = vec2(temp_joint.x+upperArmLength*cos(deltaupper + armupper), temp_joint.y+upperArmLength*sin(deltaupper + armupper));
+		cout <<"lower angle:"<< deltalower+armlower << endl;
+		cout << "upperangle:" << deltaupper + armupper << endl;
+		cout << "x:"<<int(temp_head.x)+5 << endl;
+		cout << "y:"<<int(temp_head.y)+10 << endl;
+
+		if(int(temp_head.x)>4||int(temp_head.x)<-5||int(temp_head.y)>9||int(temp_head.y)<-10 || checkoverborder(vec2(temp_head.x+5, temp_head.y+10))) {
+			return ;
+		}
+		armlower += deltalower;
+		armupper += deltaupper;
+		head = temp_head;
+		joint = temp_joint;
+		if(hold) {
+			tilepos.x = head.x+5;
+			tilepos.y = head.y+10;
+			updatetile();
+		}
+		
+		
+
 		vec4 p1[8] = {
 			vec4(tail.x*33.0, tail.y*33.0, 16.5, 1.0),
 			vec4(tail.x*33.0, 33.0+tail.y*33.0, 16.5, 1.0),
@@ -256,7 +319,11 @@ void updateArm() {
 // Called at the start of play and every time a tile is placed
 void newtile()
 {
-	tilepos = vec2(5 , 19); // Put the tile at the top of the board
+	armlower = 1.68;
+	armupper = 0.68;
+	updateArm(0.0,0.0);
+
+	tilepos = vec2(head.x+5, head.y+10); // Put the tile at the top of the board
 	hold = true;
 	state = 0;
 
@@ -265,7 +332,6 @@ void newtile()
 	for (int i = 0; i < 4; i++)
 		tile[i] = allRotationsShapes[r_type][state][i]; // Get the 4 pieces of the new tile
 	updatetile(); 
-	updateArm();
 
 	// Update the color VBO of current tile
 	vec4 newcolours[144];
@@ -446,12 +512,12 @@ void initArm() {
 	vec4 p[8] = {
 		vec4(-11*33, -10*33, 66+16.5, 1.0),
 		vec4(-11*33, -9*33, 66+16.5, 1.0),
-		vec4(-7*33, -10*33, 66+16.5, 1.0),
-		vec4(-7*33, -9*33, 66+16.5,1.0),
+		vec4(-6*33, -10*33, 66+16.5, 1.0),
+		vec4(-6*33, -9*33, 66+16.5,1.0),
 		vec4(-11*33, -10*33, -66-16.5, 1.0),
 		vec4(-11*33, -9*33, -66-16.5, 1.0),
-		vec4(-7*33, -10*33, -66-16.5, 1.0),
-		vec4(-7*33, -9*33, -66-16.5,1.0),
+		vec4(-6*33, -10*33, -66-16.5, 1.0),
+		vec4(-6*33, -9*33, -66-16.5,1.0),
 	};
 	vec4 basepoints[36];
 	addvertex(basepoints,p, 0, 0, 0, 0, 1, 2, 3);
@@ -541,8 +607,8 @@ void init()
 	projection = glGetUniformLocation(program, "projection");
 
 	// Game initialization
+	updateArm(0.0, 0.0);
 	newtile(); // create new next tile
-	updateArm();
 
 	// set to default
 	glBindVertexArray(0);
@@ -574,7 +640,6 @@ void rotate(int direction)
       }
     }
     updatetile();
-    updateArm();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -628,30 +693,30 @@ bool checkcolour(int x, int y) {
 	//left down to right up diagonal
 	while(x-d_dia_ld-1>=0 && y-d_dia_ld-1>=0 && comparecolour(boardcolours[36*(10*(y-d_dia_ld-1)+(x-d_dia_ld-1))],boardcolours[36*(10*y+x)])) d_dia_ld++;
 	while(x+d_dia_ru+1<=9 && y+d_dia_ru+1<=19 && comparecolour(boardcolours[36*(10*(y+d_dia_ru+1)+(x+d_dia_ru+1))],boardcolours[36*(10*y+x)])) d_dia_ru++;
-	cout << "x:" << x << endl;
-	cout << "y:" << y << endl;
+	//cout << "x:" << x << endl;
+	//cout << "y:" << y << endl;
 	if(d_up+d_down<2&&d_left+d_right<2&&d_dia_lu+d_dia_rd<2&&d_dia_ld+d_dia_ru<2) return false;
 	else {
 		removetable[x][y] = true;
 		if(d_up+d_down>=2) {
-			cout << "up and down:"<< d_up << ";" << d_down << endl;
+			//cout << "up and down:"<< d_up << ";" << d_down << endl;
 			for (int i=1;i<=d_up;i++) removetable[x][y+i] = true;
 			for (int i=1;i<=d_down;i++) removetable[x][y-i] = true;
 		}
 		if(d_left+d_right>=2) {
-			cout << "left and right:"<< d_left << ";" << d_right << endl;
+			//cout << "left and right:"<< d_left << ";" << d_right << endl;
 			for (int i=1;i<=d_left;i++) removetable[x-i][y] = true;
 			for (int i=1;i<=d_right;i++) removetable[x+i][y] = true;
 
 		}
 		if(d_dia_lu+d_dia_rd>=2) {
-			cout << "left_up and right_down:"<< d_dia_lu << ";" << d_dia_rd << endl;
+			//cout << "left_up and right_down:"<< d_dia_lu << ";" << d_dia_rd << endl;
 			for (int i=1;i<=d_dia_lu;i++) removetable[x-i][y+i] = true;
 			for (int i=1;i<=d_dia_rd;i++) removetable[x+i][y-i] = true;
 
 		}
 		if(d_dia_ru+d_dia_ld>=2) {
-			cout << "right up and left down:"<< d_dia_ru << ";" << d_dia_ld << endl;
+			//cout << "right up and left down:"<< d_dia_ru << ";" << d_dia_ld << endl;
 			for (int i=1;i<=d_dia_ru;i++) removetable[x+i][y+i] = true;
 			for (int i=1;i<=d_dia_ld;i++) removetable[x-i][y-i] = true;
 
@@ -674,10 +739,20 @@ void restart()
 	for(int j=0;j<7200;j++) {
 		boardcolours[j] = black;
 	}
+	armcount = 0;
+	hold = true;
+	theta = 0.0;
+	armlower = 1.68;
+	armupper = 0.68;
+
+	b_left = -10.5, b_right = 8.5; 
+	b_bottom = -12, b_top = 12;
+	zNear = 0.0, zFar = 50.0;
+
 	updateBoard();
 	
 	newtile();
-	updateArm();
+	updateArm(0.0, 0.0);
 }
 //-------------------------------------------------------------------------------------------------------------------
 void clearremovetable() {
@@ -740,9 +815,9 @@ void settle()
 			boardcolours[36 * (10 * int(tilepos.y + tile[i].y) + int(tilepos.x + tile[i].x)) + j] = tilecolour[i];
 		}
     }
-	cout << "settled:update Board" <<endl;
+	//cout << "settled:update Board" <<endl;
 	updateBoard();
-	cout << "clear removetable" << endl;
+	//cout << "clear removetable" << endl;
 	clearremovetable();
     for (int i=0;i<4;i++) {
         checkfullrow(tilepos.y+tile[i].y);
@@ -761,25 +836,17 @@ void settle()
 	}
 	if(i==10) {
 		newtile();
-		updateArm();
 	}
 	else restart(); //losed, restart 
 } 
 //------------------------------------------------------------------------------------------------------------------- 
 // Given (x,y), tries to move the tile x squares to the right and y squares down // Returns true if the tile was successfully moved, or false if there was some issue 
 bool movetile(vec2 direction) {
-	GLfloat x,y; 
-	int i; 
-	for(i=0;i<4;i++) { 
-		x = tile[i].x + tilepos.x + direction.x; 
-		y = tile[i].y + tilepos.y + direction.y; 
-		if((board[int(x)][int(y)]==true&&!hold)||y<0||x<0||x>=10||y>=20) break;
-	 } 
-	 if(i==4) { 
+	vec2 nc = vec2(tilepos.x+direction.x,tilepos.y+direction.y);
+	if(!checkoverlap(nc) && !checkoverborder(nc)) { 
 		tilepos.x += direction.x; 
 		tilepos.y += direction.y; 
 		updatetile(); 
-		updateArm();
 	}else if(direction.x==0 && direction.y==-1&&!hold) { 
 		settle();
     	}
@@ -810,12 +877,13 @@ void display()
     	mat4  p = Ortho( b_left, b_right, b_bottom, b_top, zNear, zFar );
     	glUniformMatrix4fv( projection, 1, GL_TRUE, p );
 
-	glBindVertexArray(vaoIDs[1]); // Bind the VAO representing the grid cells (to be drawn first)
-	glDrawArrays(GL_TRIANGLES, 0, 7200); // Draw the board (10*20*2 = 400 triangles)
-
 	glBindVertexArray(vaoIDs[2]); // Bind the VAO representing the current tile (to be drawn on top of the board)
 	glDrawArrays(GL_TRIANGLES, 0, 144); // Draw the current tile (8 triangles)
 
+	glBindVertexArray(vaoIDs[1]); // Bind the VAO representing the grid cells (to be drawn first)
+	glDrawArrays(GL_TRIANGLES, 0, 7200); // Draw the board (10*20*2 = 400 triangles)
+
+	
 	glBindVertexArray(vaoIDs[0]); // Bind the VAO representing the grid lines (to be drawn on top of everything else)
 	glDrawArrays(GL_LINES, 0, 590); // Draw the grid lines (21+11 = 32 lines)
 	
@@ -825,6 +893,8 @@ void display()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(vaoIDs[5]);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+	
+	output();
 
 	glutSwapBuffers();
 }
@@ -851,14 +921,14 @@ void special(int key, int x, int y)
     switch(key) {
         case GLUT_KEY_LEFT:
 	    if(ctrl) theta += dr; 
-	    else movetile(vec2(-1,0));
+	    else if(!hold) movetile(vec2(-1,0));
 	    break;
 	case GLUT_KEY_RIGHT:
 	    if(ctrl) theta -=dr;		
-	    else movetile(vec2(1,0));
+	    else if(!hold) movetile(vec2(1,0));
 	    break;
 	case GLUT_KEY_DOWN:
-	    movetile(vec2(0,-1));
+	    if(!hold) movetile(vec2(0,-1));
 	    break;
 	case GLUT_KEY_UP:
 	    rotate(1);
@@ -871,19 +941,16 @@ void special(int key, int x, int y)
 // Handles standard keypresses
 void keyboard(unsigned char key, int x, int y)
 {
-	int i;
+	
+        vec2 nc = vec2(tilepos.x, tilepos.y);
 	switch(key) 
 	{
 		case 033: // Both escape key and 'q' cause the game to exit
 		    exit(EXIT_SUCCESS);
 		    break;
 		case 32: //drop the tile
-		    for(i=0;i<4;i++) {
-			GLfloat x = tile[i].x + tilepos.x; 
-			GLfloat y = tile[i].y + tilepos.y; 
-			if(board[int(x)][int(y)]==true) break;
-		    }
-		    if(i==4) hold = false;
+		    if(checkoverborder(nc) || checkoverlap(nc)) break;
+		    else droptile();
 		    break;
 		case 'q':
 			exit (EXIT_SUCCESS);
@@ -897,13 +964,12 @@ void keyboard(unsigned char key, int x, int y)
 		case 'Y': b_bottom *= 0.9; b_top *= 0.9; break;
 		case 'o': theta += dr; break;
 		case 'O': theta -= dr; break;
-		case 'a': armlower -= dr;break;
-		case 'd': armlower += dr;break;
-		case 's': armupper -= dr;break;
-		case 'w': armupper += dr;break;
+		case 'a': updateArm(dr,0.0);break;
+		case 'd': updateArm(-dr,0.0);break;
+		case 's': updateArm(0.0,-dr);break;
+		case 'w': updateArm(0.0,dr);break;
 
 	}
-	updateArm();
 	glutPostRedisplay();
 }
 
@@ -929,12 +995,9 @@ void timer2(int value) {
 		armcount ++;
 		if(armcount >= 5) {
 			armcount = 0;
-			int i=0;
-			for (i=0;i<4;i++) {
-				if(board[int(tilepos.x+tile[i].x)][int(tilepos.y+tile[i].y)])  break;
-			}
-			if(i==4) hold=false;
-			else restart();
+			vec2 nc = vec2(tilepos.x, tilepos.y);
+			if(checkoverlap(nc) || checkoverborder(nc)) restart();
+			else droptile();
 		}
 	}
 	else {
