@@ -90,7 +90,7 @@ vec2 allRotationsShapes[6][4][4] =
 			{vec2(0, -2), vec2(0, -1), vec2(0,0), vec2(0, 1)},
 	}
 };
-
+//---------------------------------------------------------------------------------------------------------------------------
 // colors
 vec4 orange = vec4(1.0, 0.5, 0.0, 0.8); 
 vec4 white  = vec4(1.0, 1.0, 1.0, 0.8);
@@ -120,17 +120,6 @@ GLuint locysize;
 // VAO and VBO
 GLuint vaoIDs[6]; // One VAO for each object: the grid, the board, the current piece
 GLuint vboIDs[12]; // Two Vertex Buffer Objects for each VAO (specifying vertex positions and colours, respectively)
-//-------------------------------------------------------------------------------------------------------------------
-// output text on the screen
-void output() {
-    glColor3f(1.0, 1.0, 1.0);
-    glRasterPos2f(10.0, 10.0);
-    char str[2];
-    str[0] = armcount/10 - '0';
-    str[1] = armcount%10 - '0';
-    glutBitmapCharacter(GLUT_BITMAP_8_BY_13,str[0]);
-    glutBitmapCharacter(GLUT_BITMAP_8_BY_13,str[1]);
-}
 
 //-------------------------------------------------------------------------------------------------------------------
 //When the board is to be updated, update the VBO containing the board's vertext color data
@@ -174,6 +163,43 @@ bool checkoverborder(vec2 center) {
     }
     return false;
 }
+//----------------------------------------------------------------------------------------------------------------------
+//output the remaining time
+void output()
+{
+  glDisable(GL_TEXTURE_2D);
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  gluOrtho2D(0.0, xsize, 0.0, ysize);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  glRasterPos2i(100, 640);
+  void * font = GLUT_BITMAP_HELVETICA_18;
+
+  glColor3d(1.0, 1.0, 1.0);
+  glutBitmapCharacter(font, 'r');
+  glutBitmapCharacter(font, 'e');
+  glutBitmapCharacter(font, 'm');
+  glutBitmapCharacter(font, 'a');
+  glutBitmapCharacter(font, 'i');
+  glutBitmapCharacter(font, 'm');
+  glutBitmapCharacter(font, 'i');
+  glutBitmapCharacter(font, 'n');
+  glutBitmapCharacter(font, 'g');
+  glutBitmapCharacter(font, ' ');
+  glutBitmapCharacter(font, 't');
+  glutBitmapCharacter(font, 'i');
+  glutBitmapCharacter(font, 'm');
+  glutBitmapCharacter(font, 'e');
+  glutBitmapCharacter(font, ':');
+  glutBitmapCharacter(font, 5 - armcount + '0');
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  glEnable(GL_TEXTURE_2D);
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 // When the current tile is moved or rotated (or created), update the VBO containing its vertex position data
 void updatetile()
@@ -993,6 +1019,7 @@ void timer(int value) {
 void timer2(int value) {
 	if(hold) {
 		armcount ++;
+		cout <<"ramaining time:"<< 5-armcount << endl;
 		if(armcount >= 5) {
 			armcount = 0;
 			vec2 nc = vec2(tilepos.x, tilepos.y);
