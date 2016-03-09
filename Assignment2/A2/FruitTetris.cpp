@@ -195,6 +195,29 @@ void output()
   glutBitmapCharacter(font, 'e');
   glutBitmapCharacter(font, ':');
   glutBitmapCharacter(font, 5 - armcount + '0');
+
+  glRasterPos2i(100,620);
+  glutBitmapCharacter(font, 't');
+  glutBitmapCharacter(font, 'i');
+  glutBitmapCharacter(font, 'l');
+  glutBitmapCharacter(font, 'e');
+  glutBitmapCharacter(font, ' ');
+  glutBitmapCharacter(font, 'c');
+  glutBitmapCharacter(font, 'o');
+  glutBitmapCharacter(font, 'u');
+  glutBitmapCharacter(font, 'n');
+  glutBitmapCharacter(font, 't');
+  glutBitmapCharacter(font, ':');
+
+  char score[100];
+  sprintf(score, "%u", linecounter);
+  //cout <<"score:"<< score << endl;
+
+  
+  for (int i=0;i<strlen(score);i++) {
+	glutBitmapCharacter(font, score[i]);
+  }
+ 
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   glEnable(GL_TEXTURE_2D);
@@ -809,7 +832,10 @@ void executeremovetable() {
 	for(int i=0;i<10;i++) {
 		int count = 0;
 		for (int j=0;j<20;j++) {
-			if(removetable[i][j]==true) count ++;
+			if(removetable[i][j]==true) {
+				count ++;
+				linecounter ++ ;
+			}
 			else {
 				moveboard(i,j,i,j-count);
 			}
@@ -981,7 +1007,7 @@ void keyboard(unsigned char key, int x, int y)
 		case 'q':
 			exit (EXIT_SUCCESS);
 			break;
-		case 'z': // 'r' key restarts the game
+		case 'r': // 'r' key restarts the game
 			restart();
 			break;
 		case 'x': b_left *= 1.1; b_right *= 1.1; break;
