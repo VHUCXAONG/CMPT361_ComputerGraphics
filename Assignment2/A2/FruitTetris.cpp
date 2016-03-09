@@ -947,11 +947,11 @@ void special(int key, int x, int y)
     switch(key) {
         case GLUT_KEY_LEFT:
 	    if(ctrl) theta += dr; 
-	    else if(!hold) movetile(vec2(-1,0));
+	    //else if(!hold) movetile(vec2(-1,0));
 	    break;
 	case GLUT_KEY_RIGHT:
 	    if(ctrl) theta -=dr;		
-	    else if(!hold) movetile(vec2(1,0));
+	    //else if(!hold) movetile(vec2(1,0));
 	    break;
 	case GLUT_KEY_DOWN:
 	    if(!hold) movetile(vec2(0,-1));
