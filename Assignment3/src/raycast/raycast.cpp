@@ -46,24 +46,24 @@ float image_width = IMAGE_WIDTH;
 float image_height = (float(WIN_HEIGHT) / float(WIN_WIDTH)) * IMAGE_WIDTH;
 
 // some colors
-RGB_float background_clr; // background color
-RGB_float null_clr = {0.0, 0.0, 0.0};   // NULL color
+vec3 background_clr; // background color
+vec3 null_clr = {0.0, 0.0, 0.0};   // NULL color
 
 //
 // these view parameters should be fixed
 //
-Point eye_pos = {0.0, 0.0, 0.0};  // eye position
+vec3 eye_pos = vec3(0.0, 0.0, 0.0);  // eye position
 float image_plane = -1.5;           // image plane position
 
 // list of spheres in the scene
 Spheres *scene = NULL;
 
 // light 1 position and color
-Point light1;
-float light1_intensity[3];
+vec3 light1;
+vec3 light1_intensity;
 
 // global ambient term
-float global_ambient[3];
+vec3 global_ambient;
 
 // light decay parameters
 float decay_a;

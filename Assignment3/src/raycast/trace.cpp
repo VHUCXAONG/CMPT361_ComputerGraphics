@@ -15,19 +15,19 @@ extern GLfloat frame[WIN_HEIGHT][WIN_WIDTH][3];
 extern float image_width;
 extern float image_height;
 
-extern Point eye_pos;
+extern vec3 eye_pos;
 extern float image_plane;
-extern RGB_float background_clr;
-extern RGB_float null_clr;
+extern vec3 background_clr;
+extern vec3 null_clr;
 
 extern Spheres *scene;
 
 // light 1 position and color
-extern Point light1;
-extern float light1_intensity[3];
+extern vec3 light1;
+extern vec3 light1_intensity;
 
 // global ambient term
-extern float global_ambient[3];
+extern vec3 global_ambient;
 
 // light decay parameters
 extern float decay_a;
@@ -42,11 +42,11 @@ extern int step_max;
 /*********************************************************************
  * Phong illumination - you need to implement this!
  *********************************************************************/
-RGB_float phong(Point q, Vector v, Vector surf_norm, Spheres *sph) {
+vec3 phong(vec3 q, vec3 v, vec3 surf_norm, Spheres *sph) {
 //
 // do your thing here
 //
-	RGB_float color;
+	vec3 color;
 	return color;
 }
 
@@ -54,21 +54,19 @@ RGB_float phong(Point q, Vector v, Vector surf_norm, Spheres *sph) {
  * This is the recursive ray tracer - you need to implement this!
  * You should decide what arguments to use.
  ************************************************************************/
-RGB_float recursive_ray_trace(Point pixel, Vector ray, int num) {
+vec3 recursive_ray_trace(vec3 pixel, vec3 ray, int num) {
 //
 // do your thing here
 //
-	RGB_float color;
-	RGB_float amb;
-	amb.r = global_ambient[0]*light1_intensity[0]; 
-	amb.g = global_ambient[1]*light1_intensity[1]; 
-	amb.b = global_ambient[2]*light1_intensity[2];
-
-	int i;
-	for (i=1;i<=num;i++) {
-		
-	}
-
+	vec3 color;
+  if(num>step_max) {
+    color.x = background_clr.x;
+    color.y = background_clr.y;
+    color.z = background_clr.z;
+  }
+  else {
+    
+  }
 	return color;
 }
 
@@ -86,9 +84,9 @@ void ray_trace() {
   float y_grid_size = image_height / float(win_height);
   float x_start = -0.5 * image_width;
   float y_start = -0.5 * image_height;
-  RGB_float ret_color;
-  Point cur_pixel_pos;
-  Vector ray;
+  vec3 ret_color;
+  vec3 cur_pixel_pos;
+  vec3 ray;
 
   // ray is cast through center of pixel
   cur_pixel_pos.x = x_start + 0.5 * x_grid_size;

@@ -4,13 +4,13 @@
 #include "sphere.h"
 #include <stdio.h>
 
-extern Point light1;
-extern float light1_intensity[3];
+extern vec3 light1;
+extern vec3 light1_intensity;
 
-extern float global_ambient[3];
+extern vec3 global_ambient;
 extern Spheres *scene;
 
-extern RGB_float background_clr;
+extern vec3 background_clr;
 extern float decay_a;
 extern float decay_b;
 extern float decay_c;
@@ -22,18 +22,22 @@ extern float decay_c;
  *******************************************/
 void set_up_default_scene() {
   // set background color
-  background_clr.r = 0.5;
-  background_clr.g = 0.05;
-  background_clr.b = 0.8;
+  background_clr.x = 0.5;
+  background_clr.y = 0.05;
+  background_clr.z = 0.8;
 
   // set up global ambient term
-  global_ambient[0] = global_ambient[1] = global_ambient[2] = 0.2;
+  global_ambient.x = 0.2
+  global_ambient.y = 0.2
+  global_ambient.z = 0.2
 
   // set up light 1
   light1.x = -2.0;
   light1.y = 5.0;
   light1.z = 1.0;
-  light1_intensity[0] = light1_intensity[1] = light1_intensity[2] = 1.0;
+  light1_intensity.x = 1.0
+  light1_intensity.y = 1.0
+  light1_intensity.z = 1.0
 
   // set up decay parameters
   decay_a = 0.5;
