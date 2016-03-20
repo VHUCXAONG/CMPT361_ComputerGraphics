@@ -1,3 +1,4 @@
+#include "include/vec.h"
 #include "sphere.h"
 #include <stdlib.h>
 #include <math.h>
@@ -12,33 +13,38 @@
  * If there is an intersection, the point of intersection should be
  * stored in the "hit" variable
  **********************************************************************/
-float intersect_sphere(Point o, Vector u, Spheres *sph, Point *hit) {
+float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	float rsquare = sph->radius * sph->radius;
 	float a = u.x*u.x + u.y*u.y + u.z*u.z;
 	float b = 2*(o.x*u.x + o.y*u.y + o.z*u.z - sph->center.x*u.x - sph->center.y*u.y - sph->center.z*u.z);
 	float c = sph->center.x*sph->center.x + sph->center.y*sph->center.y + sph->center.z*sph->center.z - 2*sph->center.x*o.x - 2*sph->center.y*o.y - 2*sph->center.z*o.z- rsquare;
 	
 	float delta = b*b - 4*a*c;
-	if(delta<0) return -1.0;	
+	if(delta<0) {
+		//printf("no root");
+		return -1.0;	
+	}
 	 
 	float t1 = (-b + sqrt(delta)) / (2*a);
 	float t2 = (-b - sqrt(delta)) / (2*a);
+	printf("root1:%f\n",t1);
+	printf("root2:%f\n",t2);
 	
-	Vector scale1 = vec_scale(u, t1);
-	Vector scale2 = vec_scale(u, t2);
+	vec3 scale1 = u*t1;
+	vec3 scale2 = u*t2;
 
-	Vector intersect1;
+	vec3 intersect1;
 	intersect1.x = o.x + scale1.x;
 	intersect1.y = o.y + scale1.y;
 	intersect1.z = o.z + scale1.z;
 
-	Vector intersect2;
+	vec3 intersect2;
 	intersect2.x = o.x + scale2.x;
 	intersect2.y = o.y + scale2.y;
 	intersect2.z = o.z + scale2.z;
 
-	float dist1 = vec_dot(intersect1, intersect1);
-	float dist2 = vec_dot(intersect2, intersect2);
+	float dist1 = dot(intersect1, intersect1);
+	float dist2 = dot(intersect2, intersect2);
 	
 	if(dist1<=dist2) {
 		hit->x = intersect1.x;
@@ -60,24 +66,31 @@ float intersect_sphere(Point o, Vector u, Spheres *sph, Point *hit) {
  * which arguments to use for the function. For exmaple, note that you
  * should return the point of intersection to the calling function.
  **********************************************************************/
-Spheres *intersect_scene(Point s, Vector ray, Spheres *slist) {
+Spheres *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit) {
 //
 // do your thing here
 //
+	//printf("intersecting the scene...\n");
 	Spheres* l = slist;
 	Spheres* rv = NULL;
-	Point oldhit;
-	Point hit;
+	vec3 oldhit;
 	bool newhit = true;
 	float itsct = -1.0;
 	
 	while(l) {
-		itsct = intersect_sphere(s, ray, l, &hit);
-		if(itsct==-1.0) continue;
-		if(newhit==true || (hit.x*hit.x+hit.y*hit.y+hit.z*hit.z) < (oldhit.x*oldhit.x+oldhit.y*oldhit.y+oldhit.z*oldhit.z)) {
-			newhit = false;
-			rv = l;
-			oldhit = hit;
+		//printf("sphere address:%u\n",l);
+		//printf("%f %f %f\n",l->center.x, l->center.y, l->center.z);
+		//printf("%f\n",l->radius);
+		itsct = intersect_sphere(s, ray, l, hit);
+		//printf("intersect value:%f\n", itsct);
+		if(itsct!=-1.0) {
+			if(newhit==true || ((newhit==false)&&(hit->x*hit->x+hit->y*hit->y+hit->z*hit->z) < (oldhit.x*oldhit.x+oldhit.y*oldhit.y+oldhit.z*oldhit.z))) {
+				newhit = false;
+				rv = l;
+				oldhit.x = hit->x;
+				oldhit.y = hit->y;
+				oldhit.z = hit->z;
+			}
 		}
 		l = l->next;
 	}
@@ -89,8 +102,8 @@ Spheres *intersect_scene(Point s, Vector ray, Spheres *slist) {
  *
  * You need not change this.
  *****************************************************/
-Spheres *add_sphere(Spheres *slist, Point ctr, float rad, float amb[],
-		    float dif[], float spe[], float shine, 
+Spheres *add_sphere(Spheres *slist, vec3 ctr, float rad, vec3 amb,
+		    vec3 dif, vec3 spe, float shine, 
 		    float refl, int sindex) {
   Spheres *new_sphere;
 
@@ -98,15 +111,15 @@ Spheres *add_sphere(Spheres *slist, Point ctr, float rad, float amb[],
   new_sphere->index = sindex;
   new_sphere->center = ctr;
   new_sphere->radius = rad;
-  (new_sphere->mat_ambient)[0] = amb[0];
-  (new_sphere->mat_ambient)[1] = amb[1];
-  (new_sphere->mat_ambient)[2] = amb[2];
-  (new_sphere->mat_diffuse)[0] = dif[0];
-  (new_sphere->mat_diffuse)[1] = dif[1];
-  (new_sphere->mat_diffuse)[2] = dif[2];
-  (new_sphere->mat_specular)[0] = spe[0];
-  (new_sphere->mat_specular)[1] = spe[1];
-  (new_sphere->mat_specular)[2] = spe[2];
+  (new_sphere->mat_ambient).x = amb.x;
+  (new_sphere->mat_ambient).y = amb.y;
+  (new_sphere->mat_ambient).z = amb.z;
+  (new_sphere->mat_diffuse).x = dif.x;
+  (new_sphere->mat_diffuse).y = dif.y;
+  (new_sphere->mat_diffuse).z = dif.z;
+  (new_sphere->mat_specular).x = spe.x;
+  (new_sphere->mat_specular).y = spe.y;
+  (new_sphere->mat_specular).z = spe.z;
   new_sphere->mat_shineness = shine;
   new_sphere->reflectance = refl;
   new_sphere->next = NULL;
@@ -124,10 +137,9 @@ Spheres *add_sphere(Spheres *slist, Point ctr, float rad, float amb[],
 /******************************************
  * computes a sphere normal - done for you
  ******************************************/
-Vector sphere_normal(Point q, Spheres *sph) {
-  Vector rc;
-
-  rc = get_vec(sph->center, q);
-  normalize(&rc);
+vec3 sphere_normal(vec3 q, Spheres *sph) {
+  vec3 rc;
+  rc = q - sph->center;
+  normalize(rc);
   return rc;
 }

@@ -1,18 +1,18 @@
 /**********************************************************************
  * Some stuff to handle spheres
  **********************************************************************/
-#include "vector.h"
+#include"include/vec.h"
 
 typedef struct sphere {
   int index;               // identifies a sphere; must be greater than 0
 
-  Point center;
+  vec3 center;
   float radius;
 
-  float mat_ambient[3];    // material property used in Phong model
-  float mat_diffuse[3];
-  float mat_specular[3];
-  float mat_shineness;
+  vec3 mat_ambient;    // material property used in Phong model
+  vec3 mat_diffuse;
+  vec3 mat_specular;
+  vec3 mat_shineness;
 
   float reflectance;       // this number [0,1] determines how much 
                            // reflected light contributes to the color
@@ -21,9 +21,9 @@ typedef struct sphere {
 } Spheres;   // a list of spheres
 
 // intersect ray with sphere
-Spheres *intersect_scene(Point, Vector, Spheres *, Point *, int);
+Spheres *intersect_scene(vec3, vec3, Spheres *, vec3 *);
 // return the unit normal at a point on sphere
-Vector sphere_normal(Point, Spheres *);
+vec3 sphere_normal(vec3, Spheres *);
 // add a sphere to the sphere list
-Spheres *add_sphere(Spheres *, Point, float, float [], float [], float [], float, float, int);
+Spheres *add_sphere(Spheres *, vec3, float, vec3 , vec3, vec3, float, float, int);
 

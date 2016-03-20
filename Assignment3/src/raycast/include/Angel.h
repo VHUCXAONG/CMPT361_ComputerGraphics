@@ -37,7 +37,6 @@
 #  include <GLUT/glut.h>
 #else // non-Mac OS X operating systems
 #  include <GL/glew.h>
-//#  include <GL/glut.h>
 #  include <GL/freeglut.h>
 #  include <GL/freeglut_ext.h>
 #endif  // __APPLE__
@@ -67,7 +66,7 @@ const GLfloat  DegreesToRadians = M_PI / 180.0;
 }  // namespace Angel
 
 #include "vec.h"
-#include "mat.h"
+//#include "mat.h"
 #include "CheckError.h"
 
 #define Print(x)  do { std::cerr << #x " = " << (x) << std::endl; } while(0)

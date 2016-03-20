@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <GL/glut.h>
 #include <math.h>
 #include "global.h"
 #include "sphere.h"
@@ -42,11 +41,16 @@ extern int step_max;
 /*********************************************************************
  * Phong illumination - you need to implement this!
  *********************************************************************/
-vec3 phong(vec3 q, vec3 v, vec3 surf_norm, Spheres *sph) {
+vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
 //
 // do your thing here
 //
-	vec3 color;
+	vec3 raynormal = normalize(ray);
+	float dist = dot(ray, ray);
+	vec3 color=vec3(0,0,0);
+	color += global_ambient * sph->mat_ambient;
+	color += 1.0 * light1_intensity * sph->mat_ambient/(decay_a*dist+decay_b*sqrt(dist)+decay_c);
+	printf("phong color:%f,%f,%f\n",color.x, color.y, color.z);
 	return color;
 }
 
@@ -54,20 +58,23 @@ vec3 phong(vec3 q, vec3 v, vec3 surf_norm, Spheres *sph) {
  * This is the recursive ray tracer - you need to implement this!
  * You should decide what arguments to use.
  ************************************************************************/
-vec3 recursive_ray_trace(vec3 pixel, vec3 ray, int num) {
+vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 //
 // do your thing here
 //
-	vec3 color;
-  if(num>step_max) {
-    color.x = background_clr.x;
-    color.y = background_clr.y;
-    color.z = background_clr.z;
-  }
-  else {
-    
-  }
-	return color;
+	printf("entering recursive ray tracing\n");
+	vec3 hit;
+	Spheres *sph = intersect_scene(eye, ray, scene, &hit);
+	printf("intersect point: %f, %f, %f\n", hit.x, hit.y, hit.z);
+	if(sph==NULL) {
+		printf("no intersect\n");
+		return background_clr;
+	}
+	
+	vec3 raydir = hit - eye;
+	vec3 surf_normal = sphere_normal(hit,sph);
+	return phong(eye, raydir, surf_normal, sph);
+	
 }
 
 /*********************************************************************
@@ -79,6 +86,7 @@ vec3 recursive_ray_trace(vec3 pixel, vec3 ray, int num) {
  * if you must.
  *********************************************************************/
 void ray_trace() {
+  printf("entering the ray tracer\n");
   int i, j;
   float x_grid_size = image_width / float(win_width);
   float y_grid_size = image_height / float(win_height);
@@ -92,30 +100,35 @@ void ray_trace() {
   cur_pixel_pos.x = x_start + 0.5 * x_grid_size;
   cur_pixel_pos.y = y_start + 0.5 * y_grid_size;
   cur_pixel_pos.z = image_plane;
+  printf("window height:%d\n",win_height);
+  printf("window width:%d\n",win_width);
+  printf("%d\n",WIN_HEIGHT);
+  printf("%d\n",WIN_WIDTH);
 
   for (i=0; i<win_height; i++) {
     for (j=0; j<win_width; j++) {
-      ray = get_vec(eye_pos, cur_pixel_pos);
-
+      printf("i:%d\n",i); 
+      printf("j:%d\n",j);
+      ray = cur_pixel_pos - eye_pos;
+      ray = normalize(ray);
       //
       // You need to change this!!!
       //
-      //ret_color = recursive_ray_trace();
+      ret_color = recursive_ray_trace(eye_pos, ray, 0);
       //ret_color = background_clr; // just background for now
 
       // Parallel rays can be cast instead using below
       //
       // ray.x = ray.y = 0;
       // ray.z = -1.0;
-      ret_color = recursive_ray_trace(cur_pixel_pos, ray, step_max);
 
       // Checkboard for testing
-      RGB_float clr = {float(i/32), 0, float(j/32)};
-      ret_color = clr;
+      //vec3 clr = vec3(float(i/32), 0, float(j/32));
+      //ret_color = clr;
 
-      frame[i][j][0] = GLfloat(ret_color.r);
-      frame[i][j][1] = GLfloat(ret_color.g);
-      frame[i][j][2] = GLfloat(ret_color.b);
+      frame[i][j][0] = GLfloat(ret_color.x);
+      frame[i][j][1] = GLfloat(ret_color.y);
+      frame[i][j][2] = GLfloat(ret_color.z);
 
       cur_pixel_pos.x += x_grid_size;
     }

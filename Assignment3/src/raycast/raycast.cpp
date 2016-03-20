@@ -47,7 +47,7 @@ float image_height = (float(WIN_HEIGHT) / float(WIN_WIDTH)) * IMAGE_WIDTH;
 
 // some colors
 vec3 background_clr; // background color
-vec3 null_clr = {0.0, 0.0, 0.0};   // NULL color
+vec3 null_clr = vec3(0.0, 0.0, 0.0);   // NULL color
 
 //
 // these view parameters should be fixed
@@ -202,6 +202,8 @@ void keyboard(unsigned char key, int x, int y)
 
 int main( int argc, char **argv )
 {
+	printf("%d\n",win_width);
+	printf("%d\n",win_height);
 	// Parse the arguments
 	if (argc < 3) {
 		printf("Missing arguments ... use:\n");
@@ -212,6 +214,7 @@ int main( int argc, char **argv )
 	if (strcmp(argv[1], "-u") == 0) {  // user defined scene
 		set_up_user_scene();
 	} else { // default scene
+		printf("setting up default scene\n");
 		set_up_default_scene();
 	}
 
@@ -231,6 +234,7 @@ int main( int argc, char **argv )
 	//
 	printf("Rendering scene using my fantastic ray tracer ...\n");
 	ray_trace();
+	printf("ray tracing ended\n");
 
 	// we want to make sure that intensity values are normalized
 	histogram_normalization();
