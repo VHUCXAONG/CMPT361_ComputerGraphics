@@ -210,6 +210,7 @@ int main( int argc, char **argv )
 		printf("./raycast [-u | -d] step_max <options>\n");
 		return -1;
 	}
+	int fortest;
 	
 	if (strcmp(argv[1], "-u") == 0) {  // user defined scene
 		set_up_user_scene();
@@ -219,6 +220,8 @@ int main( int argc, char **argv )
 	}
 
 	step_max = atoi(argv[2]); // maximum level of recursions
+	printf("step_max:%d\n",step_max);
+	scanf("%d", &fortest);
 
 	// Optional arguments
 	for(int i = 3; i < argc; i++)

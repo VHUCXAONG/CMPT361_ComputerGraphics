@@ -12,7 +12,7 @@ typedef struct sphere {
   vec3 mat_ambient;    // material property used in Phong model
   vec3 mat_diffuse;
   vec3 mat_specular;
-  vec3 mat_shineness;
+  float mat_shineness;
 
   float reflectance;       // this number [0,1] determines how much 
                            // reflected light contributes to the color

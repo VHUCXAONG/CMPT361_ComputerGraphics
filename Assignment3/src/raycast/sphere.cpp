@@ -27,8 +27,8 @@ float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	 
 	float t1 = (-b + sqrt(delta)) / (2*a);
 	float t2 = (-b - sqrt(delta)) / (2*a);
-	printf("root1:%f\n",t1);
-	printf("root2:%f\n",t2);
+	//printf("root1:%f\n",t1);
+	//printf("root2:%f\n",t2);
 	
 	vec3 scale1 = u*t1;
 	vec3 scale2 = u*t2;
@@ -140,6 +140,6 @@ Spheres *add_sphere(Spheres *slist, vec3 ctr, float rad, vec3 amb,
 vec3 sphere_normal(vec3 q, Spheres *sph) {
   vec3 rc;
   rc = q - sph->center;
-  normalize(rc);
+  rc = normalize(rc);
   return rc;
 }

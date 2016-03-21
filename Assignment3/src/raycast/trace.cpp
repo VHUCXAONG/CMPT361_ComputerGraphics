@@ -36,6 +36,10 @@ extern float decay_c;
 extern int shadow_on;
 extern int step_max;
 
+float max_float(float a, float b) {
+	if(a<=b) return b;
+	return a;
+}
 /////////////////////////////////////////////////////////////////////
 
 /*********************************************************************
@@ -49,8 +53,18 @@ vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
 	float dist = dot(ray, ray);
 	vec3 color=vec3(0,0,0);
 	color += global_ambient * sph->mat_ambient;
-	color += 1.0 * light1_intensity * sph->mat_ambient/(decay_a*dist+decay_b*sqrt(dist)+decay_c);
-	printf("phong color:%f,%f,%f\n",color.x, color.y, color.z);
+	vec3 ambient = light1_intensity * sph->mat_ambient;
+	vec3 diffuse = dot(-1*raynormal, surf_norm)*light1_intensity*sph->mat_diffuse;
+
+	vec3 reflect_vector = 2*dot(-1*raynormal, surf_norm)*surf_norm + raynormal;
+	printf("reflect vector:%f %f %f\n", reflect_vector.x, reflect_vector.y, reflect_vector.z);
+	printf("dot product1:%f\n", dot(-1*raynormal, surf_norm));
+	printf("dot product2:%f\n", dot(reflect_vector, surf_norm));
+	vec3 specular = max_float(pow(dot(reflect_vector, surf_norm),sph->mat_shineness),0)*light1_intensity * sph->mat_specular;
+	printf("specular color:%f %f %f\n", specular.x, specular.y, specular.z);
+	
+	color += 1.0 * (ambient + diffuse + specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
+	//printf("phong color:%f,%f,%f\n",color.x, color.y, color.z);
 	return color;
 }
 
@@ -62,19 +76,25 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 //
 // do your thing here
 //
-	printf("entering recursive ray tracing\n");
+	//printf("step_max and num:%d %d\n", step_max, num);
+	if(num>step_max) return null_clr;
+	//printf("entering recursive ray tracing\n");
 	vec3 hit;
 	Spheres *sph = intersect_scene(eye, ray, scene, &hit);
-	printf("intersect point: %f, %f, %f\n", hit.x, hit.y, hit.z);
+	//printf("intersect point: %f, %f, %f\n", hit.x, hit.y, hit.z);
 	if(sph==NULL) {
-		printf("no intersect\n");
+		//printf("no intersect\n");
 		return background_clr;
 	}
 	
 	vec3 raydir = hit - eye;
 	vec3 surf_normal = sphere_normal(hit,sph);
-	return phong(eye, raydir, surf_normal, sph);
-	
+	vec3 raydirnormal = normalize(raydir);
+	vec3 rdir = normalize(2*dot(-1*raydirnormal, surf_normal)*surf_normal+raydirnormal);
+	vec3 phong_color = phong(eye, raydir, surf_normal, sph);
+	vec3 recursive_color = recursive_ray_trace(hit, rdir, num+1);
+	//printf("recursive color: %f %f %f\n", recursive_color.x, recursive_color.y, recursive_color.z);
+	return phong_color + recursive_color; 	
 }
 
 /*********************************************************************
@@ -100,21 +120,23 @@ void ray_trace() {
   cur_pixel_pos.x = x_start + 0.5 * x_grid_size;
   cur_pixel_pos.y = y_start + 0.5 * y_grid_size;
   cur_pixel_pos.z = image_plane;
-  printf("window height:%d\n",win_height);
-  printf("window width:%d\n",win_width);
-  printf("%d\n",WIN_HEIGHT);
-  printf("%d\n",WIN_WIDTH);
+  //printf("window height:%d\n",win_height);
+  //printf("window width:%d\n",win_width);
+  //printf("%d\n",WIN_HEIGHT);
+  //printf("%d\n",WIN_WIDTH);
 
   for (i=0; i<win_height; i++) {
     for (j=0; j<win_width; j++) {
-      printf("i:%d\n",i); 
-      printf("j:%d\n",j);
       ray = cur_pixel_pos - eye_pos;
       ray = normalize(ray);
       //
       // You need to change this!!!
       //
       ret_color = recursive_ray_trace(eye_pos, ray, 0);
+      //if(ret_color.x!=background_clr.x || ret_color.y!=background_clr.y || ret_color.z!=background_clr.z) {
+//	      printf("x:%d, y:%d\n",i, j);
+//	      printf("returned colour:%f %f %f\n", ret_color.x, ret_color.y, ret_color.z);
+ //     }
       //ret_color = background_clr; // just background for now
 
       // Parallel rays can be cast instead using below
@@ -129,6 +151,7 @@ void ray_trace() {
       frame[i][j][0] = GLfloat(ret_color.x);
       frame[i][j][1] = GLfloat(ret_color.y);
       frame[i][j][2] = GLfloat(ret_color.z);
+      //printf("frame: %f %f %f\n", frame[i][j][0], frame[i][j][1], frame[i][j][2]);
 
       cur_pixel_pos.x += x_grid_size;
     }
