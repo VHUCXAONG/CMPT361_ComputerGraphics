@@ -6,6 +6,7 @@
 
 extern vec3 light1;
 extern vec3 light1_intensity;
+extern float light1_shadow;
 
 extern vec3 global_ambient;
 extern Spheres *scene;
@@ -39,6 +40,7 @@ void set_up_default_scene() {
   light1_intensity.x = 1.0;
   light1_intensity.y = 1.0;
   light1_intensity.z = 1.0;
+  light1_shadow = 0.9;
 
   // set up decay parameters
   decay_a = 0.5;
