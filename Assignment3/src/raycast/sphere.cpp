@@ -13,14 +13,20 @@
  * If there is an intersection, the point of intersection should be
  * stored in the "hit" variable
  **********************************************************************/
+float precision = 0.00001;
 float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
-	float rsquare = sph->radius * sph->radius;
-	float a = u.x*u.x + u.y*u.y + u.z*u.z;
-	float b = 2*(o.x*u.x + o.y*u.y + o.z*u.z - sph->center.x*u.x - sph->center.y*u.y - sph->center.z*u.z);
-	float c = sph->center.x*sph->center.x + sph->center.y*sph->center.y + sph->center.z*sph->center.z - 2*sph->center.x*o.x - 2*sph->center.y*o.y - 2*sph->center.z*o.z+ o.x*o.z + o.y*o.y + o.z*o.z- rsquare;
+	float x1 = o.x - sph->center.x;
+	float y1 = o.y - sph->center.y;
+	float z1 = o.z - sph->center.z;
+
+	float a = dot(u,u);
+
+	float b = 2.0*(u.x*x1 + u.y*y1 + u.z*z1);
+
+	float c = x1*x1 + y1*y1 + z1*z1 - (sph->radius) * (sph->radius);
 	
 	float delta = b*b - 4*a*c;
-	if(delta<0) {
+	if(delta<-precision) {
 		//printf("no root");
 		return -1.0;	
 	}
@@ -29,8 +35,13 @@ float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	float t2 = (-b - sqrt(delta)) / (2*a);
 	//printf("root1:%f\n",t1);
 	//printf("root2:%f\n",t2);
+	hit->x = t2*u.x+ o.x;
+	hit->y = t2*u.y+ o.y;
+	hit->z = t2*u.z+ o.z;
+	return t2;
 	
-	vec3 scale1 = u*t1;
+	
+	/*vec3 scale1 = u*t1;
 	vec3 scale2 = u*t2;
 
 	vec3 intersect1;
@@ -78,7 +89,7 @@ float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	//	else {
 	//	}
 	}
-	else return -1.0;
+	else return -1.0;*/
 }
 
 /*********************************************************************

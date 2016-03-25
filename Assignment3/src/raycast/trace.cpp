@@ -55,10 +55,10 @@ vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
 	//printf("reflect vector:%f %f %f\n", reflect_vector.x, reflect_vector.y, reflect_vector.z);
 	//printf("dot product1:%f\n", dot(-1*raynormal, surf_norm));
 	//printf("dot product2:%f\n", dot(reflect_vector, surf_norm));
-	vec3 specular = max_float(pow(dot(reflect_vector, surf_norm),sph->mat_shineness),0)*light1_intensity * sph->mat_specular;
+	vec3 specular = max_float(pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness),0)*light1_intensity * sph->mat_specular;
 	//printf("specular color:%f %f %f\n", specular.x, specular.y, specular.z);
 	
-	color += 1.0 * light1_shadow*(diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
+	color += 1.0 * light1_shadow *(diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
 	//printf("phong color:%f,%f,%f\n",color.x, color.y, color.z);
 	return color;
 
@@ -83,7 +83,7 @@ vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
 	//printf("reflect vector:%f %f %f\n", reflect_vector.x, reflect_vector.y, reflect_vector.z);
 	//printf("dot product1:%f\n", dot(-1*raynormal, surf_norm));
 	//printf("dot product2:%f\n", dot(reflect_vector, surf_norm));
-	vec3 specular = max_float(pow(dot(reflect_vector, surf_norm),sph->mat_shineness),0)*light1_intensity * sph->mat_specular;
+	vec3 specular = max_float(pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness),0)*light1_intensity * sph->mat_specular;
 	//printf("specular color:%f %f %f\n", specular.x, specular.y, specular.z);
 	
 	color += 1.0 * (diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
@@ -104,6 +104,7 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 	//printf("entering recursive ray tracing\n");
 	vec3 hit;
 	Spheres *sph = intersect_scene(eye, ray, scene, &hit);
+	vec3 raynormal = normalize(ray);
 	//printf("intersect point: %f, %f, %f\n", hit.x, hit.y, hit.z);
 	if(sph==NULL) {
 		if (num>0) return null_clr;
@@ -117,28 +118,36 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 	vec3 lightvec = light1 - hit;
 	vec3 lightvec_normal = normalize(lightvec);
 	vec3 lighthit;
-	Spheres * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit);
+	Spheres * light_sph = intersect_scene(hit, lightvec, scene, &lighthit);
 	// the intersection point is not blocked by othe objects
 	//printf("light intersection:%u\n", light_sph);
 	//printf("intersection point:%f %f %f\n", lighthit.x, lighthit.y, lighthit.z);
 	
 	vec3 color = null_clr;
 	vec3 surf_normal = sphere_normal(hit, sph);
-	if (light_sph == NULL) {
-		//printf("not blocked");
-		color +=  phong(light1, lightvec, surf_normal, sph);
-		if(reflect_on) {
-			vec3 reflect_vector = 2*dot(ray, surf_normal)*surf_normal - ray;
-			color += sph->reflectance * recursive_ray_trace(hit, reflect_vector,num+1);
-		}
+	//if (light_sph == NULL) {
+	//printf("not blocked");
+	if(shadow_on && light_sph!=NULL) {
+		color += get_shadow(normalize(-1*ray), lightvec, surf_normal, sph);
 	}
-	else if(shadow_on) { // it is blocked by other objects
+	else {
+		color +=  phong(normalize(-1*ray), lightvec, surf_normal, sph);
+	}
+
+	if(reflect_on) {
+		vec3 reflect_vector = 2*dot(normalize(-1*ray), surf_normal)*surf_normal + normalize(ray);
+		//reflect_vector = normalize(reflect_vector);
+		color += sph->reflectance * recursive_ray_trace(hit, reflect_vector,num+1);
+	}
+	
+	//}
+//	if(shadow_on) { // it is blocked by other objects
 		//printf("blocked");
-		color+= get_shadow(light1, lightvec, surf_normal, sph);
-	}
-	else { 
-		color += global_ambient*sph->mat_ambient;
-	}
+//		color+= get_shadow(light1, lightvec, surf_normal, sph);
+//	}
+//	else { 
+//		color += global_ambient*sph->mat_ambient;
+//	}
 
 	return color;
 
@@ -174,7 +183,6 @@ void ray_trace() {
   for (i=0; i<win_height; i++) {
     for (j=0; j<win_width; j++) {
       ray = cur_pixel_pos - eye_pos;
-      ray = normalize(ray);
       //
       // You need to change this!!!
       //
