@@ -16,6 +16,8 @@ extern float decay_a;
 extern float decay_b;
 extern float decay_c;
 
+extern struct plane pl;
+
 //////////////////////////////////////////////////////////////////////////
 
 /*******************************************
@@ -82,6 +84,7 @@ void set_up_default_scene() {
   scene = add_sphere(scene, sphere3_ctr, sphere3_rad, sphere3_ambient,
              sphere3_diffuse, sphere3_specular, sphere3_shineness,
 		     sphere3_reflectance, 3);
+
 }
 
 /***************************************

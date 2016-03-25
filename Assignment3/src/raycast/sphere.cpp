@@ -13,7 +13,18 @@
  * If there is an intersection, the point of intersection should be
  * stored in the "hit" variable
  **********************************************************************/
+extern struct plane pl;
 float precision = 0.00001;
+float intersect_plane(vec3 o, vec3 u, float *x, float *z) {
+	if(u.y==0) return -1.0;
+	
+	float t = (-pl.leftbottom.y-o.y)/u.y;
+	*x = o.x + t*u.x;
+	*z = o.z + t*u.z;
+	if(*x>pl.righttop.x || *x<pl.leftbottom.x || *z<pl.righttop.z || *z>pl.leftbottom.z) return -1.0;
+	
+	return t;
+}
 float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	float x1 = o.x - sph->center.x;
 	float y1 = o.y - sph->center.y;

@@ -27,3 +27,17 @@ vec3 sphere_normal(vec3, Spheres *);
 // add a sphere to the sphere list
 Spheres *add_sphere(Spheres *, vec3, float, vec3 , vec3, vec3, float, float, int);
 
+struct plane {
+	vec3 leftbottom;
+	vec3 righttop;
+	
+	//vec3 mat_ambient;
+	//vec3 mat_diffuse;
+	//vec3 mat_specular;
+	
+	//float mat_shineness;
+	//float reflectance;
+	
+};
+
+float intersect_plane(vec3, vec3, float *, float *);
