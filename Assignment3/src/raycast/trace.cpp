@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "sphere.h"
+//#include "sphere.h"
+#include "object.h"
 
 //
 // Global variables
@@ -19,9 +20,7 @@ extern float image_plane;
 extern vec3 background_clr;
 extern vec3 null_clr;
 
-extern Spheres *scene;
-// the chess board
-extern struct plane pl;
+extern Object *scene;
 
 // light 1 position and color
 extern vec3 light1;
@@ -45,8 +44,39 @@ float max_float(float a, float b) {
 	if(a<=b) return b;
 	return a;
 }
+/////////////////////////////////////////////////////////////////////
+
+/*********************************************************************
+ * Phong illumination - you need to implement this!
+ *********************************************************************/
+vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Object *sph, vec3 hit) {
+//
+// do your thing here
+//
+	vec3 color=vec3(0,0,0);
+	if(sph->type=='p') {
+		if((int(hit.x)+int(hit.z))%2==0) return vec3(0,0,0);
+		else return vec3(1,1,1);
+	}
+	else {
+		vec3 raynormal = normalize(ray);
+		float dist = dot(ray, ray);
+		color += global_ambient * sph->mat_ambient;
+
+		vec3 diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sph->mat_diffuse;
+
+		vec3 reflect_vector = 2*dot(raynormal, surf_norm)*surf_norm - raynormal;
+
+		vec3 specular = pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness)*light1_intensity * sph->mat_specular;
+	
+		color += 1.0 * (diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
+	}
+	return color;
+}
 //compute the shadow
-vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
+vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, Object *sph, vec3 hit) {
+	if(sph->type=='p') return vec3(0,0,0);
+
 	vec3 raynormal = normalize(ray);
 	float dist = dot(ray, ray);
 	vec3 color=vec3(0,0,0);
@@ -62,29 +92,6 @@ vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
 	return color;
 
 }
-/////////////////////////////////////////////////////////////////////
-
-/*********************************************************************
- * Phong illumination - you need to implement this!
- *********************************************************************/
-vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph) {
-//
-// do your thing here
-//
-	vec3 raynormal = normalize(ray);
-	float dist = dot(ray, ray);
-	vec3 color=vec3(0,0,0);
-	color += global_ambient * sph->mat_ambient;
-
-	vec3 diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sph->mat_diffuse;
-
-	vec3 reflect_vector = 2*dot(raynormal, surf_norm)*surf_norm - raynormal;
-
-	vec3 specular = pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness)*light1_intensity * sph->mat_specular;
-	
-	color += 1.0 * (diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
-	return color;
-}
 
 /************************************************************************
  * This is the recursive ray tracer - you need to implement this!
@@ -96,39 +103,24 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 //
 	if(num>step_max) return null_clr;
 	vec3 hit;
-	Spheres *sph = intersect_scene(eye, ray, scene, &hit);
+	Object *sph = intersect_scene(eye, ray, scene, &hit);
 
 	vec3 color = null_clr;
-	float plane_x, plane_y;
-	float plane_t=-1.0;
-	if(board_on){
-		plane_t = intersect_plane(eye, ray, &plane_x, &plane_y);
-	}
-
-	if(sph==NULL) {
-		if(board_on) {
-			if(plane_t==-1.0) return background_clr;
-			else if((int(plane_x)+int(plane_y))%2==0) return vec3(1.0,1.0,1.0);
-			else return vec3(0, 0, 0);
-		}
-		else return background_blr;
-	}
-	else {
-		
-	}
+	if(sph==NULL) 
+		return background_clr;
 
 	vec3 lightvec = light1 - hit;
 	vec3 lightvec_normal = normalize(lightvec);
 	vec3 lighthit;
-	Spheres * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit);
+	Object * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit);
 	
-	vec3 surf_normal = sphere_normal(hit, sph);
+	vec3 surf_normal = sph->get_surfnormal(hit);
 
 	if(shadow_on && light_sph!=NULL) {
-		color += get_shadow(-1*ray, lightvec, surf_normal, sph);
+		color += get_shadow(-1*ray, lightvec, surf_normal, sph, hit);
 	}
 	else {
-		color +=  phong(-1*ray, lightvec, surf_normal, sph);
+		color +=  phong(-1*ray, lightvec, surf_normal, sph, hit);
 	}
 
 	if(reflect_on) {

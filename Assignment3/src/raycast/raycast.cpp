@@ -21,7 +21,8 @@
 
 #include "trace.h"
 #include "global.h"
-#include "sphere.h"
+//#include "sphere.h"
+#include "object.h"
 #include "image_util.h"
 #include "scene.h"
 
@@ -56,7 +57,8 @@ vec3 eye_pos = vec3(0.0, 0.0, 0.0);  // eye position
 float image_plane = -1.5;           // image plane position
 
 // list of spheres in the scene
-Spheres *scene = NULL;
+//Spheres *scene = NULL;
+Object *scene = NULL;
 
 // light 1 position and color
 vec3 light1;
@@ -84,9 +86,6 @@ int board_on = 0;
 
 // OpenGL
 const int NumPoints = 6;
-
-//chessboard
-struct plane pl;
 
 //----------------------------------------------------------------------------
 
@@ -234,8 +233,8 @@ int main( int argc, char **argv )
 		else if (strcmp(argv[i], "+c")==0) board_on = 1;
 	}
 	if(board_on) {
-		pl.leftbottom = vec3(-4,3,0);
-		pl.righttop = vec3(4,3,-8);
+		plane* pl = new plane(4, vec3(-4, 3, 0), vec3(4,3,-8));
+		scene->add_Object(pl); 
 	}
 
 	//
