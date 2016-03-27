@@ -21,8 +21,8 @@
 
 #include "trace.h"
 #include "global.h"
-//#include "sphere.h"
-#include "object.h"
+#include "sphere.h"
+//#include "object.h"
 #include "image_util.h"
 #include "scene.h"
 
@@ -57,8 +57,8 @@ vec3 eye_pos = vec3(0.0, 0.0, 0.0);  // eye position
 float image_plane = -1.5;           // image plane position
 
 // list of spheres in the scene
-//Spheres *scene = NULL;
-Object *scene = NULL;
+Spheres *scene = NULL;
+//Object *scene = NULL;
 
 // light 1 position and color
 vec3 light1;
@@ -86,6 +86,9 @@ int board_on = 0;
 
 // OpenGL
 const int NumPoints = 6;
+
+//plane
+struct plane pl;
 
 //----------------------------------------------------------------------------
 
@@ -207,8 +210,8 @@ void keyboard(unsigned char key, int x, int y)
 
 int main( int argc, char **argv )
 {
-	printf("%d\n",win_width);
-	printf("%d\n",win_height);
+	//printf("%d\n",win_width);
+	//printf("%d\n",win_height);
 	// Parse the arguments
 	if (argc < 3) {
 		printf("Missing arguments ... use:\n");
@@ -232,10 +235,10 @@ int main( int argc, char **argv )
 		else if (strcmp(argv[i], "+l")==0) reflect_on = 1;
 		else if (strcmp(argv[i], "+c")==0) board_on = 1;
 	}
-	if(board_on) {
-		plane* pl = new plane(4, vec3(-4, 3, 0), vec3(4,3,-8));
-		scene->add_Object(pl); 
-	}
+	//if(board_on) {
+	//	plane* pl = new plane(4, vec3(-4, -3, 0), vec3(4, -3,-8));
+	//	scene= pl->add_Object(scene); 
+	//}
 
 	//
 	// ray trace the scene now
