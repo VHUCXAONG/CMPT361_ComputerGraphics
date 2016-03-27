@@ -50,57 +50,6 @@ float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
 	hit->y = t2*u.y+ o.y;
 	hit->z = t2*u.z+ o.z;
 	return t2;
-	
-	
-	/*vec3 scale1 = u*t1;
-	vec3 scale2 = u*t2;
-
-	vec3 intersect1;
-	intersect1.x = o.x + scale1.x;
-	intersect1.y = o.y + scale1.y;
-	intersect1.z = o.z + scale1.z;
-
-	vec3 intersect2;
-	intersect2.x = o.x + scale2.x;
-	intersect2.y = o.y + scale2.y;
-	intersect2.z = o.z + scale2.z;
-	
-	if(t1<=0 && t2>0) {
-		hit->x = intersect2.x;
-		hit->y = intersect2.y;
-		hit->z = intersect2.z;
-		return t2;
-	}
-	else if(t1>0 && t2<=0){
-		hit->x = intersect1.x;
-		hit->y = intersect1.y;
-		hit->z = intersect1.z;
-		return t1;
-	}
-	else if(t1>0 && t2>0){
-		if(t1 <= t2) {
-			hit->x = intersect1.x;
-			hit->y = intersect1.y;
-			hit->z = intersect1.z;
-			return t1;
-	
-		}
-		else {
-			hit->x = intersect2.x;
-			hit->y = intersect2.y;
-			hit->z = intersect2.z;
-			return t2;
-		}
-
-	//	float dist1 = dot(intersect1, intersect1);
-	//	float dist2 = dot(intersect2, intersect2);
-		
-	//	if(dist1<=dist2) {
-	//	}
-	//	else {
-	//	}
-	}
-	else return -1.0;*/
 }
 
 /*********************************************************************

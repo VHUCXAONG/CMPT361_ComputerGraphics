@@ -1,4 +1,4 @@
-#include<object.h>
+#include "object.h"
 
 Object* Object:: add_Object(Object* obj) {
 	if(obj==NULL) {
@@ -52,7 +52,7 @@ float plane:: intersect(vec3 origin, vec3 dir, vec3* hit) {
 
 }
 
-float plane:: get_surfnormal(vec3 hitpoint) {
+vec3 plane:: get_surfnormal(vec3 hitpoint) {
 	return vec3(0,1,0);
 	
 }
@@ -66,7 +66,7 @@ Object * intersect_scene(vec3 origin, vec3 dir, Object* scene, vec3* hit) {
 	while(s_ptr) {
 		float local_t = s_ptr->intersect(origin, dir, &nhit);
 
-		if(local!=-1.0) {
+		if(local_t>0) {
 			if(local_t < best_t) {
 				best_t = local_t;
 				*hit = *nhit;

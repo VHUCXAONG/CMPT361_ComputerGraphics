@@ -1,4 +1,5 @@
 #include"include/vec.h"
+const float precision = 0.00001;
 class Object {
 public:
 	int index;
@@ -45,11 +46,11 @@ public:
 
 class plane: public Object {
 public:
-	vec3 lowerbottom;
-	vec3 uppertop;
+	vec3 leftbottom;
+	vec3 righttop;
 	
 	plane(int id, vec3 lb, vec3 ut):
-	Object(id, 'p', vec3(0,0,0), vec3(0,0,0), vec3(0,0,0), 10, 0.4), lowerbottom(lb), uppertop(ut) {};
+	Object(id, 'p', vec3(0,0,0), vec3(0,0,0), vec3(0,0,0), 10, 0.4), leftbottom(lb), righttop(ut) {};
 	virtual ~plane() {
 		delete this;
 	}

@@ -129,7 +129,7 @@ image_util.o: image_util.cpp /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/string.h \
  global.h
-sphere.o: sphere.cpp /usr/include/stdc-predef.h include/vec.h \
+object.o: object.cpp /usr/include/stdc-predef.h object.h include/vec.h \
  include/Angel.h /usr/include/c++/4.8/cmath \
  /usr/include/x86_64-linux-gnu/c++/4.8/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/4.8/bits/os_defines.h \
@@ -227,7 +227,7 @@ sphere.o: sphere.cpp /usr/include/stdc-predef.h include/vec.h \
  /usr/include/x86_64-linux-gnu/sys/sysmacros.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/GL/freeglut_ext.h /usr/include/GL/freeglut_ext.h \
- include/vec.h include/CheckError.h sphere.h
+ include/vec.h include/CheckError.h
 vector.o: vector.cpp /usr/include/stdc-predef.h vector.h \
  /usr/include/math.h /usr/include/features.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \

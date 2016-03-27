@@ -108,6 +108,7 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 	vec3 color = null_clr;
 	if(sph==NULL) 
 		return background_clr;
+	else return null_clr;
 
 	vec3 lightvec = light1 - hit;
 	vec3 lightvec_normal = normalize(lightvec);
