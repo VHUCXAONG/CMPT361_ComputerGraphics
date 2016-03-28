@@ -40,6 +40,7 @@ extern int shadow_on;
 extern int reflect_on;
 extern int board_on;
 extern int refract_on;
+extern int antialias_on;
 
 extern int step_max;
 extern struct plane pl;
@@ -254,13 +255,44 @@ void ray_trace() {
   for (i=0; i<win_height; i++) {
     for (j=0; j<win_width; j++) {
       //printf("cur_pixel_pos:%f %f %f\n",cur_pixel_pos.x, cur_pixel_pos.y, cur_pixel_pos.z);
+      ret_color = vec3(0,0,0);
       ray = cur_pixel_pos - eye_pos;
       ray = normalize(ray);
       //
       // You need to change this!!!
       //
-      ret_color = recursive_ray_trace(eye_pos, ray, 0);
-      //printf("return color: %f %f %f\n",ret_color.x, ret_color.y, ret_color.z);
+      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+
+      if(antialias_on) {
+	      vec3 pixel;
+	      pixel.z = cur_pixel_pos.z;
+
+	      // pixel 1
+	      pixel.x = cur_pixel_pos.x - 0.25*x_grid_size;
+	      pixel.y = cur_pixel_pos.y + 0.25*y_grid_size;
+	      ray = normalize(pixel - eye_pos);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+
+	      // pixel 2
+	      pixel.x = cur_pixel_pos.x - 0.25*x_grid_size;
+	      pixel.y = cur_pixel_pos.y - 0.25*y_grid_size;
+	      ray = normalize(pixel - eye_pos);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+
+	      // pixel 3
+	      pixel.x = cur_pixel_pos.x + 0.25*x_grid_size;
+	      pixel.y = cur_pixel_pos.y + 0.25*y_grid_size;
+	      ray = normalize(pixel - eye_pos);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+
+	      // pixel 4
+	      pixel.x = cur_pixel_pos.x + 0.25*x_grid_size;
+	      pixel.y = cur_pixel_pos.y - 0.25*y_grid_size;
+	      ray = normalize(pixel - eye_pos);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+
+	      ret_color = 0.2*ret_color;
+      }
 
       frame[i][j][0] = GLfloat(ret_color.x);
       frame[i][j][1] = GLfloat(ret_color.y);
