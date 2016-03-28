@@ -15,7 +15,6 @@
  **********************************************************************/
 extern struct plane pl;
 extern int board_on;
-float precision = 0.00001;
 float intersect_plane(vec3 o, vec3 u, vec3 *hit) {
 	if(u.y==0) return -1.0;
 	
@@ -76,7 +75,7 @@ void *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit, int *isplane)
 
 	if(board_on) {
 		itsct = intersect_plane(s, ray, &nhit);
-		if(itsct > 0) {
+		if(itsct > 0 && fabs(itsct)>t_precise) {
 			oldsct = itsct;
 			newhit = false;
 			rv = &pl;
@@ -92,7 +91,7 @@ void *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit, int *isplane)
 	//	printf("%f\n",l->radius);
 		itsct = intersect_sphere(s, ray, l, &nhit);
 		//printf("intersect value:%f\n", itsct);
-		if(itsct>0) {
+		if(itsct>0 && fabs(itsct) > t_precise) {
 	//		printf("itsect:%f\n",itsct);
 			if(newhit==true || ((newhit==false)&&(itsct<oldsct))) {
 				oldsct = itsct;
@@ -116,7 +115,7 @@ void *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit, int *isplane)
  *****************************************************/
 Spheres *add_sphere(Spheres *slist, vec3 ctr, float rad, vec3 amb,
 		    vec3 dif, vec3 spe, float shine, 
-		    float refl, int sindex) {
+		    float refl, float refr, float refractivity, int sindex) {
   Spheres *new_sphere;
 
   new_sphere = (Spheres *)malloc(sizeof(Spheres));
@@ -134,6 +133,8 @@ Spheres *add_sphere(Spheres *slist, vec3 ctr, float rad, vec3 amb,
   (new_sphere->mat_specular).z = spe.z;
   new_sphere->mat_shineness = shine;
   new_sphere->reflectance = refl;
+  new_sphere->refr = refr;
+  new_sphere->refractivity = refractivity;
   new_sphere->next = NULL;
 
   if (slist == NULL) { // first object

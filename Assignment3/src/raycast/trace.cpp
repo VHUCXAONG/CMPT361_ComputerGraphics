@@ -39,8 +39,12 @@ extern float decay_c;
 extern int shadow_on;
 extern int reflect_on;
 extern int board_on;
-extern int step_max;
+extern int refract_on;
 
+extern int step_max;
+extern struct plane pl;
+
+//float precision = 0.00001;
 float max_float(float a, float b) {
 	if(a<=b) return b;
 	return a;
@@ -110,6 +114,51 @@ vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, void *sph, vec3 hit, int isp
 	return color;
 
 }
+//normal and inlight are both outward and unit vector
+bool refract_light(vec3 normal, vec3 inlight, float ratio, vec3* outlight) {
+	float root = 1 - pow(ratio, 2)*(1-pow(dot(normal, inlight),2)); 
+	if(root<precision) {
+//		printf("no root\n");
+		return false; //no root
+	}
+	*outlight =  (ratio*dot(normal,inlight) - sqrt(root)) * normal - ratio*inlight;
+	return true;
+}
+// computation of the input point/dir and output point/dir of the refractor light
+bool refraction(vec3 inpoint, vec3 invector, void* obj, int isplane, vec3* outlightpoint, vec3* outlightvector) {
+//	printf("*****");
+	if(isplane) return false;
+//	printf("not plane\n");
+	Spheres * sph = (Spheres *)obj;
+	//intermediate light
+	vec3 midlight;
+	vec3 in_normal = sphere_normal(inpoint, sph);
+	float ratio = 1.0/sph->refractivity;
+	if(!refract_light(in_normal, invector, ratio, &midlight)) {
+//		printf("first refraction fail\n");
+		return false; 
+	}
+	
+	vec3 outpoint;
+	int ispln;
+	float intersect_t = intersect_sphere(inpoint, midlight, sph, &outpoint);
+	if(intersect_t+1.0<precision)  {
+//		printf("intersect with no object\n");
+		return false;
+	}
+	ratio = 1.0/ratio;
+	vec3 out_normal = -1 * sphere_normal(outpoint, sph);
+	midlight = -1*midlight;
+	vec3 outbeam;
+	if(!refract_light(out_normal, midlight, ratio, &outbeam)) {
+//		printf("second refraction fail\n");
+		return false;
+	}
+	*outlightpoint = outpoint;
+	*outlightvector = outbeam;
+//	printf("good refraction\n");
+	return true;
+}
 
 /************************************************************************
  * This is the recursive ray tracer - you need to implement this!
@@ -134,6 +183,7 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 	vec3 lighthit;
 	int lightisplane;
 	void * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit, &lightisplane);
+	
 	vec3 surf_normal = isplane?vec3(0,1,0):sphere_normal(hit, (Spheres*)sph);
 
 	if(light_sph==NULL) {
@@ -156,6 +206,18 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 		}
 		else if(!isplane)
 			color += ((Spheres *)sph)->reflectance * recursive_ray_trace(hit, reflect_vector, num+1);
+	}
+	
+	if(refract_on) {
+//		printf("refraction is on\n");
+		vec3 outlightpoint, outlightvector; 
+		if(refraction(hit, -1*ray, sph, isplane, &outlightpoint, &outlightvector)) {
+			if(!isplane) {
+//				printf("refraction point\n");
+				Spheres * refractsph = (Spheres *)sph;
+				color += refractsph->refr*recursive_ray_trace(outlightpoint, outlightvector, num+1);
+			}
+		}
 	}
 
 	return color;

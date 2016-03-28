@@ -54,11 +54,13 @@ void set_up_default_scene() {
   vec3 sphere1_specular = vec3(1.0, 1.0, 1.0);
   float sphere1_shineness = 10;
   float sphere1_reflectance = 0.4;
+  float sphere1_refr = 0.3;
+  float sphere1_refractivity = 1.52;
   //sphere* sphere1 = new sphere(1, sphere1_ambient, sphere1_diffuse, sphere1_specular, sphere1_shineness, sphere1_reflectance, sphere1_rad, sphere1_ctr);
   //scene = sphere1->add_Object(scene);
   scene = add_sphere(scene, sphere1_ctr, sphere1_rad, sphere1_ambient,
             sphere1_diffuse, sphere1_specular, sphere1_shineness,
-		     sphere1_reflectance, 1);
+		     sphere1_reflectance, sphere1_refr, sphere1_refractivity, 1);
 
   // sphere 2
   vec3 sphere2_ctr = vec3(-1.5, 0.0, -3.5);
@@ -68,9 +70,12 @@ void set_up_default_scene() {
   vec3 sphere2_specular = vec3(1.0, 1.0, 1.0);
   float sphere2_shineness = 6;
   float sphere2_reflectance = 0.3;
+  float sphere2_refr = 0.3;
+  float sphere2_refractivity = 2.417;
+
   scene = add_sphere(scene, sphere2_ctr, sphere2_rad, sphere2_ambient,
             sphere2_diffuse, sphere2_specular, sphere2_shineness,
-		     sphere2_reflectance, 2);
+		     sphere2_reflectance, sphere2_refr, sphere2_refractivity, 2);
 //  sphere* sphere2 = new sphere(2, sphere2_ambient, sphere2_diffuse, sphere2_specular, sphere2_shineness, sphere2_reflectance, sphere2_rad, sphere2_ctr);
  // scene = sphere2->add_Object(scene);
 
@@ -82,9 +87,12 @@ void set_up_default_scene() {
   vec3 sphere3_specular = vec3(0.0, 1.0, 0.0);
   float sphere3_shineness = 30;
   float sphere3_reflectance = 0.3;
+  float sphere3_refr = 0.3;
+  float sphere3_refractivity = 1.77;
+
   scene = add_sphere(scene, sphere3_ctr, sphere3_rad, sphere3_ambient,
             sphere3_diffuse, sphere3_specular, sphere3_shineness,
-		     sphere3_reflectance, 3);
+		     sphere3_reflectance, sphere3_refr, sphere3_refractivity, 3);
 //  sphere* sphere3 = new sphere(3, sphere3_ambient, sphere3_diffuse, sphere3_specular, sphere3_shineness, sphere3_reflectance, sphere3_rad, sphere3_ctr);
 //  scene = sphere3->add_Object(scene);
 
