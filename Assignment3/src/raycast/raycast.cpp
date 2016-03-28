@@ -83,6 +83,7 @@ int shadow_on = 0;
 int reflect_on = 0;
 int board_on = 0;
 int refract_on = 0;
+int diffuse_reflection_on = 0;
 int antialias_on = 0;
 
 
@@ -238,6 +239,7 @@ int main( int argc, char **argv )
 		else if (strcmp(argv[i], "+c")==0) board_on = 1;
 		else if (strcmp(argv[i], "+r")==0) refract_on = 1;
 		else if (strcmp(argv[i], "+p")==0) antialias_on = 1;
+		else if (strcmp(argv[i], "+f")==0) diffuse_reflection_on = 1;
 	}
 	if(board_on) {
 		pl.leftbottom = vec3(-4, -3, 0);

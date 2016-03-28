@@ -40,11 +40,33 @@ extern int shadow_on;
 extern int reflect_on;
 extern int board_on;
 extern int refract_on;
+extern int diffuse_reflection_on;
 extern int antialias_on;
 
 extern int step_max;
 extern struct plane pl;
 
+vec3 rotateX(float theta, vec3 v) {
+	vec3 rv = vec3(0,0,0);
+	rv.x = v.x;
+	rv.y = cos(theta)*v.y - sin(theta)*v.z;
+	rv.z = sin(theta)*v.y + cos(theta)*v.z;
+	return rv;
+}
+vec3 rotateY(float theta, vec3 v) {
+	vec3 rv = vec3(0,0,0);
+	rv.y = v.y;
+	rv.x = cos(theta)*v.x + sin(theta)*v.z;
+	rv.z = -1*sin(theta)*v.x + cos(theta)*v.z;
+	return rv;
+}
+vec3 rotateZ(float theta, vec3 v) {
+	vec3 rv = vec3(0,0,0);
+	rv.z = v.z;
+	rv.x = cos(theta)*v.x - sin(theta)*v.y;
+	rv.y = sin(theta)*v.x + cos(theta)*v.y;
+	return rv;
+}
 //float precision = 0.00001;
 float max_float(float a, float b) {
 	if(a<=b) return b;
@@ -218,6 +240,20 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 				Spheres * refractsph = (Spheres *)sph;
 				color += refractsph->refr*recursive_ray_trace(outlightpoint, outlightvector, num+1);
 			}
+		}
+	}
+	
+	if(diffuse_reflection_on && num<2) {
+		int i;
+		for (i=0;i<DIFFUSE_REFLECTION;i++) {
+			float xtheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
+			float ytheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
+			float ztheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
+			vec3 dfray;
+			dfray = rotateX(xtheta*M_PI,surf_normal);
+			dfray = rotateY(ytheta*M_PI,dfray);
+			dfray = rotateZ(ztheta*M_PI,dfray);
+			color += (1.0/DIFFUSE_REFLECTION)*recursive_ray_trace(hit, dfray, num+1);
 		}
 	}
 
