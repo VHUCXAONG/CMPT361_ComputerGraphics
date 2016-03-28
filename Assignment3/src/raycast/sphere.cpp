@@ -14,14 +14,16 @@
  * stored in the "hit" variable
  **********************************************************************/
 extern struct plane pl;
+extern int board_on;
 float precision = 0.00001;
-float intersect_plane(vec3 o, vec3 u, float *x, float *z) {
+float intersect_plane(vec3 o, vec3 u, vec3 *hit) {
 	if(u.y==0) return -1.0;
 	
-	float t = (-pl.leftbottom.y-o.y)/u.y;
-	*x = o.x + t*u.x;
-	*z = o.z + t*u.z;
-	if(*x>pl.righttop.x || *x<pl.leftbottom.x || *z<pl.righttop.z || *z>pl.leftbottom.z) return -1.0;
+	float t = (pl.leftbottom.y-o.y)/u.y;
+	hit->x = o.x + t*u.x;
+	hit->y = o.y + t*u.y;
+	hit->z = o.z + t*u.z;
+	if(hit->x>pl.righttop.x || hit->x<pl.leftbottom.x || hit->z<pl.righttop.z || hit->z>pl.leftbottom.z) return -1.0;
 	
 	return t;
 }
@@ -58,19 +60,32 @@ float intersect_sphere(vec3 o, vec3 u, Spheres *sph, vec3 *hit) {
  * which arguments to use for the function. For exmaple, note that you
  * should return the point of intersection to the calling function.
  **********************************************************************/
-Spheres *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit) {
+void *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit, int *isplane) {
 //
 // do your thing here
 //
 	//printf("intersecting the scene...\n");
 	Spheres* l = slist;
-	Spheres* rv = NULL;
+	void* rv = NULL;
 	//vec3 oldhit;
 	vec3 nhit;
 	bool newhit = true;
 	float itsct = -1.0;
 	float oldsct = -1.0;
 	
+
+	if(board_on) {
+		itsct = intersect_plane(s, ray, &nhit);
+		if(itsct > 0) {
+			oldsct = itsct;
+			newhit = false;
+			rv = &pl;
+			hit->x = nhit.x;
+			hit->y = nhit.y;
+			hit->z = nhit.z;
+			*isplane = 1;
+		}
+	}
 	while(l) {
 	//	printf("sphere address:%u\n",l);
 	//	printf("%f %f %f\n",l->center.x, l->center.y, l->center.z);
@@ -86,6 +101,7 @@ Spheres *intersect_scene(vec3 s, vec3 ray, Spheres *slist, vec3 *hit) {
 				hit->x = nhit.x;
 				hit->y = nhit.y;
 				hit->z = nhit.z;
+				*isplane = 0;
 			}
 		}
 		l = l->next;

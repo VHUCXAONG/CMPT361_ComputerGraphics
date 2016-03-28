@@ -50,48 +50,61 @@ float max_float(float a, float b) {
 /*********************************************************************
  * Phong illumination - you need to implement this!
  *********************************************************************/
-vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph, vec3 hit) {
+vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, void *sph, vec3 hit, int isplane) {
 //
 // do your thing here
 //
 	vec3 color=vec3(0,0,0);
-//	if(sph->type=='p') {
-//		if((int(hit.x)+int(hit.z))%2==0) return vec3(0,0,0);
-//		else return vec3(1,1,1);
-//	}
-//	else {
-		vec3 raynormal = normalize(ray);
-		float dist = dot(ray, ray);
-		color += global_ambient * sph->mat_ambient;
+	vec3 raynormal = normalize(ray);
+	float dist = dot(ray, ray);
+	vec3 diffuse;
+	vec3 specular;
+	vec3 reflect_vector = 2*dot(raynormal, surf_norm)*surf_norm - raynormal;
+
+	if(isplane==1) {
+		struct plane* pln= (struct plane*)sph;
+		color += global_ambient * pln->mat_ambient;
+		if((int(hit.x)+int(hit.z))%2==0) diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse1;
+		else diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse2;
+		
+		specular = pow(max_float(dot(reflect_vector,eye),0), pln->shineness)*light1_intensity*pln->mat_specular;
+	}
+	else {
+		Spheres *sphr = (Spheres *)sph;
+		color += global_ambient * sphr->mat_ambient;
 		//printf("ambient: %f %f %f\n", color.x, color.y, color.z);
-
 		//printf("mat_diffuse: %f %f %f\n", sph->mat_diffuse.x,sph->mat_diffuse.y, sph->mat_diffuse.z);
-		vec3 diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sph->mat_diffuse;
+		diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sphr->mat_diffuse;
 		//printf("diffuse: %f %f %f\n", diffuse.x, diffuse.y, diffuse.z);
-
-		vec3 reflect_vector = 2*dot(raynormal, surf_norm)*surf_norm - raynormal;
-
-		vec3 specular = pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness)*light1_intensity * sph->mat_specular;
+		specular = pow(max_float(dot(reflect_vector, eye),0),sphr->mat_shineness)*light1_intensity * sphr->mat_specular;
 		//printf("specular: %f %f %f\n", specular.x, specular.y, specular.z);
+	}
 
-		color += 1.0 * (diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
-//	}
+	color += 1.0 * (diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
 	return color;
 }
 //compute the shadow
-vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, Spheres *sph, vec3 hit) {
-	//if(sph->type=='p') return vec3(0,0,0);
+vec3 get_shadow(vec3 eye, vec3 ray, vec3 surf_norm, void *sph, vec3 hit, int isplane) {
 
 	vec3 raynormal = normalize(ray);
 	float dist = dot(ray, ray);
 	vec3 color=vec3(0,0,0);
-	color += global_ambient * sph->mat_ambient;
-
-	vec3 diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sph->mat_diffuse;
-
 	vec3 reflect_vector = 2*dot(raynormal, surf_norm)*surf_norm - raynormal;
+	vec3 diffuse;
+	vec3 specular;
 
-	vec3 specular = pow(max_float(dot(reflect_vector, eye),0),sph->mat_shineness)*light1_intensity * sph->mat_specular;
+	if(isplane==1) {
+		struct plane *pln = (struct plane *)sph;
+		if((int(hit.x) + int(hit.z))%2==0) diffuse=max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse1;
+		else  diffuse=max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse2;
+		specular = pow(max_float(dot(reflect_vector,eye),0), pln->shineness)*light1_intensity*pln->mat_specular;
+	}
+	else {
+		Spheres *sphr= (Spheres *)sph;
+		color += global_ambient * sphr->mat_ambient;
+		diffuse = max_float(dot(raynormal, surf_norm),0)*light1_intensity*sphr->mat_diffuse;
+		specular = pow(max_float(dot(reflect_vector, eye),0),sphr->mat_shineness)*light1_intensity * sphr->mat_specular;
+	}
 	
 	color += 1.0 * light1_shadow *(diffuse+specular)/(decay_c*dist+decay_b*sqrt(dist)+decay_a);
 	return color;
@@ -108,31 +121,41 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 //
 	if(num>step_max) return null_clr;
 	vec3 hit;
-	Spheres *sph = intersect_scene(eye, ray, scene, &hit);
+	int isplane;
+	void *sph = intersect_scene(eye, ray, scene, &hit, &isplane);
 
 	vec3 color = null_clr;
-	if(sph==NULL) 
+	if(sph==NULL) { 
 		return background_clr;
+	}
 
 	vec3 lightvec = light1 - hit;
 	vec3 lightvec_normal = normalize(lightvec);
 	vec3 lighthit;
-	Spheres * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit);
-	
-	
-	vec3 surf_normal = sphere_normal(hit, sph);
+	int lightisplane;
+	void * light_sph = intersect_scene(hit, lightvec_normal, scene, &lighthit, &lightisplane);
+	vec3 surf_normal = isplane?vec3(0,1,0):sphere_normal(hit, (Spheres*)sph);
 
-	if(shadow_on && light_sph!=NULL) {
-		color += get_shadow(-1*ray, lightvec, surf_normal, sph, hit);
+	if(light_sph==NULL) {
+		color += phong(-1*ray, lightvec, surf_normal, sph, hit, isplane);
 	}
 	else {
-		color +=  phong(-1*ray, lightvec, surf_normal, sph, hit);
+		if(!shadow_on) {
+			color += phong(-1*ray, lightvec, surf_normal, sph, hit, isplane);
+		}
+		else {
+			color += get_shadow(-1*ray, lightvec, surf_normal, sph, hit, isplane);
+		}
 	}
 
 	if(reflect_on) {
 		vec3 reflect_vector = 2*dot(-1*ray, surf_normal)*surf_normal + ray;
 		reflect_vector = normalize(reflect_vector);
-		color += sph->reflectance * recursive_ray_trace(hit, reflect_vector,num+1);
+		if(isplane) {
+			color += ((struct plane*)sph)->reflectance * recursive_ray_trace(hit, reflect_vector,num+1);
+		}
+		else if(!isplane)
+			color += ((Spheres *)sph)->reflectance * recursive_ray_trace(hit, reflect_vector, num+1);
 	}
 
 	return color;

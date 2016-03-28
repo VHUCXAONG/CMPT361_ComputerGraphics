@@ -5,8 +5,8 @@
  *      
  *  Render a simple scene using ray tracing
  * 
- *  NAME:
- *  SFU ID:
+ *  NAME: Bowei Yuan
+ *  SFU ID: 301295751
  *
  *  Template code for drawing a scene using raycasting.
  *  Some portions of the code was originally written by 
@@ -235,10 +235,17 @@ int main( int argc, char **argv )
 		else if (strcmp(argv[i], "+l")==0) reflect_on = 1;
 		else if (strcmp(argv[i], "+c")==0) board_on = 1;
 	}
-	//if(board_on) {
-	//	plane* pl = new plane(4, vec3(-4, -3, 0), vec3(4, -3,-8));
-	//	scene= pl->add_Object(scene); 
-	//}
+	if(board_on) {
+		pl.leftbottom = vec3(-4, -3, 0);
+		pl.righttop = vec3(4, -3,-8);
+		pl.reflectance = 0.4;
+		pl.mat_ambient = vec3(0, 0, 0);
+		pl.mat_diffuse1 = vec3(4, 4, 4);
+		pl.mat_diffuse2 = vec3(0.0, 0.0, 0.0);
+		pl.mat_specular = vec3(1.0, 1.0, 1.0);
+		pl.shineness = 10;
+		
+	}
 
 	//
 	// ray trace the scene now

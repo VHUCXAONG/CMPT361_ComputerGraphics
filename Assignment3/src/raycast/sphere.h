@@ -21,7 +21,7 @@ typedef struct sphere {
 } Spheres;   // a list of spheres
 
 // intersect ray with sphere
-Spheres *intersect_scene(vec3, vec3, Spheres *, vec3 *);
+void *intersect_scene(vec3, vec3, Spheres *, vec3 *, int *);
 // return the unit normal at a point on sphere
 vec3 sphere_normal(vec3, Spheres *);
 // add a sphere to the sphere list
@@ -30,14 +30,13 @@ Spheres *add_sphere(Spheres *, vec3, float, vec3 , vec3, vec3, float, float, int
 struct plane {
 	vec3 leftbottom;
 	vec3 righttop;
+	float reflectance;
 	
-	//vec3 mat_ambient;
-	//vec3 mat_diffuse;
-	//vec3 mat_specular;
-	
-	//float mat_shineness;
-	//float reflectance;
-	
+	vec3 mat_ambient;
+	vec3 mat_diffuse1;
+	vec3 mat_diffuse2;
+	vec3 mat_specular;
+	float shineness;
 };
 
-float intersect_plane(vec3, vec3, float *, float *);
+float intersect_plane(vec3, vec3, vec3*);
