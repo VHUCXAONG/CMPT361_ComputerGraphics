@@ -246,14 +246,14 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 	if(diffuse_reflection_on && num<2) {
 		int i;
 		for (i=0;i<DIFFUSE_REFLECTION;i++) {
-			float xtheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
-			float ytheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
-			float ztheta = static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 0.5;
+			float xtheta = 2.0 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 1.0;
+			float ytheta = 2.0 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 1.0;
+			float ztheta = 2.0 * static_cast <float> (rand()) / static_cast <float> (RAND_MAX) - 1.0;
 			vec3 dfray;
 			dfray = rotateX(xtheta*M_PI,surf_normal);
 			dfray = rotateY(ytheta*M_PI,dfray);
 			dfray = rotateZ(ztheta*M_PI,dfray);
-			color += (1.0/DIFFUSE_REFLECTION)*recursive_ray_trace(hit, dfray, num+1);
+			color += (0.1/DIFFUSE_REFLECTION)*recursive_ray_trace(hit, dfray, num+1);
 		}
 	}
 
