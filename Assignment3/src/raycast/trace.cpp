@@ -45,7 +45,6 @@ extern int antialias_on;
 
 extern int step_max;
 extern struct plane pl;
-
 vec3 rotateX(float theta, vec3 v) {
 	vec3 rv = vec3(0,0,0);
 	rv.x = v.x;
@@ -91,9 +90,15 @@ vec3 phong(vec3 eye, vec3 ray, vec3 surf_norm, void *sph, vec3 hit, int isplane)
 	if(isplane==1) {
 		struct plane* pln= (struct plane*)sph;
 		color += global_ambient * pln->mat_ambient;
-		if((int(hit.x)+int(hit.z))%2==0) diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse1;
-		else diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse2;
 		
+		if(hit.x>=0) {
+			if((int(hit.x)+int(hit.z))%2==0) diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse1;
+			else diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse2;
+		}
+		else {
+			if((int(hit.x)-1+int(hit.z))%2==0) diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse1;
+			else diffuse = max_float(dot(raynormal,surf_norm),0)*light1_intensity*pln->mat_diffuse2;
+		}
 		specular = pow(max_float(dot(reflect_vector,eye),0), pln->shineness)*light1_intensity*pln->mat_specular;
 	}
 	else {
@@ -148,38 +153,18 @@ bool refract_light(vec3 normal, vec3 inlight, float ratio, vec3* outlight) {
 	return true;
 }
 // computation of the input point/dir and output point/dir of the refractor light
-bool refraction(vec3 inpoint, vec3 invector, void* obj, int isplane, vec3* outlightpoint, vec3* outlightvector) {
+bool refraction(vec3 inpoint, vec3 invector, void* obj, int isplane, bool inobj, vec3* outlightvector) {
 //	printf("*****");
 	if(isplane) return false;
 //	printf("not plane\n");
 	Spheres * sph = (Spheres *)obj;
 	//intermediate light
-	vec3 midlight;
 	vec3 in_normal = sphere_normal(inpoint, sph);
-	float ratio = 1.0/sph->refractivity;
-	if(!refract_light(in_normal, invector, ratio, &midlight)) {
-//		printf("first refraction fail\n");
-		return false; 
-	}
+	float ratio;
+	if(!inobj) ratio = 1.0/sph->refractivity;
+	else ratio = sph->refractivity;
 	
-	vec3 outpoint;
-	int ispln;
-	float intersect_t = intersect_sphere(inpoint, midlight, sph, &outpoint);
-	if(intersect_t+1.0<precision)  {
-//		printf("intersect with no object\n");
-		return false;
-	}
-	ratio = 1.0/ratio;
-	vec3 out_normal = -1 * sphere_normal(outpoint, sph);
-	midlight = -1*midlight;
-	vec3 outbeam;
-	if(!refract_light(out_normal, midlight, ratio, &outbeam)) {
-//		printf("second refraction fail\n");
-		return false;
-	}
-	*outlightpoint = outpoint;
-	*outlightvector = outbeam;
-//	printf("good refraction\n");
+	if(!refract_light(in_normal, invector, ratio, outlightvector)) return false;
 	return true;
 }
 
@@ -187,7 +172,7 @@ bool refraction(vec3 inpoint, vec3 invector, void* obj, int isplane, vec3* outli
  * This is the recursive ray tracer - you need to implement this!
  * You should decide what arguments to use.
  ************************************************************************/
-vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
+vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num, bool inobj) {
 //
 // do your thing here
 //
@@ -225,20 +210,19 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 		vec3 reflect_vector = 2*dot(-1*ray, surf_normal)*surf_normal + ray;
 		reflect_vector = normalize(reflect_vector);
 		if(isplane) {
-			color += ((struct plane*)sph)->reflectance * recursive_ray_trace(hit, reflect_vector,num+1);
+			color += ((struct plane*)sph)->reflectance * recursive_ray_trace(hit, reflect_vector,num+1, inobj);
 		}
 		else if(!isplane)
-			color += ((Spheres *)sph)->reflectance * recursive_ray_trace(hit, reflect_vector, num+1);
+			color += ((Spheres *)sph)->reflectance * recursive_ray_trace(hit, reflect_vector, num+1, inobj);
 	}
 	
 	if(refract_on) {
-//		printf("refraction is on\n");
-		vec3 outlightpoint, outlightvector; 
-		if(refraction(hit, -1*ray, sph, isplane, &outlightpoint, &outlightvector)) {
+		vec3 outlightvector; 
+		if(refraction(hit, -1*ray, sph, isplane, inobj, &outlightvector)) {
 			if(!isplane) {
 //				printf("refraction point\n");
 				Spheres * refractsph = (Spheres *)sph;
-				color += refractsph->refr*recursive_ray_trace(outlightpoint, outlightvector, num+1);
+				color += refractsph->refr*recursive_ray_trace(hit, outlightvector, num+1, !inobj);
 			}
 		}
 	}
@@ -253,7 +237,7 @@ vec3 recursive_ray_trace(vec3 eye, vec3 ray, int num) {
 			dfray = rotateX(xtheta*M_PI,surf_normal);
 			dfray = rotateY(ytheta*M_PI,dfray);
 			dfray = rotateZ(ztheta*M_PI,dfray);
-			color += (0.1/DIFFUSE_REFLECTION)*recursive_ray_trace(hit, dfray, num+1);
+			color += (0.1/DIFFUSE_REFLECTION)*recursive_ray_trace(hit, dfray, num+1, inobj);
 		}
 	}
 
@@ -297,7 +281,7 @@ void ray_trace() {
       //
       // You need to change this!!!
       //
-      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+      ret_color += recursive_ray_trace(eye_pos, ray, 0, false);
 
       if(antialias_on) {
 	      vec3 pixel;
@@ -307,25 +291,25 @@ void ray_trace() {
 	      pixel.x = cur_pixel_pos.x - 0.25*x_grid_size;
 	      pixel.y = cur_pixel_pos.y + 0.25*y_grid_size;
 	      ray = normalize(pixel - eye_pos);
-	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0, false);
 
 	      // pixel 2
 	      pixel.x = cur_pixel_pos.x - 0.25*x_grid_size;
 	      pixel.y = cur_pixel_pos.y - 0.25*y_grid_size;
 	      ray = normalize(pixel - eye_pos);
-	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0, false);
 
 	      // pixel 3
 	      pixel.x = cur_pixel_pos.x + 0.25*x_grid_size;
 	      pixel.y = cur_pixel_pos.y + 0.25*y_grid_size;
 	      ray = normalize(pixel - eye_pos);
-	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0, false);
 
 	      // pixel 4
 	      pixel.x = cur_pixel_pos.x + 0.25*x_grid_size;
 	      pixel.y = cur_pixel_pos.y - 0.25*y_grid_size;
 	      ray = normalize(pixel - eye_pos);
-	      ret_color += recursive_ray_trace(eye_pos, ray, 0);
+	      ret_color += recursive_ray_trace(eye_pos, ray, 0, false);
 
 	      ret_color = 0.2*ret_color;
       }

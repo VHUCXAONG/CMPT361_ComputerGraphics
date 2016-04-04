@@ -242,7 +242,7 @@ int main( int argc, char **argv )
 		else if (strcmp(argv[i], "+f")==0) diffuse_reflection_on = 1;
 	}
 	if(board_on) {
-		pl.leftbottom = vec3(-4, -3, 0);
+		pl.leftbottom = vec3(-4, -3, -3);
 		pl.righttop = vec3(4, -3,-8);
 		pl.reflectance = 0.4;
 		pl.mat_ambient = vec3(0, 0, 0);
