@@ -117,14 +117,14 @@ void set_up_chess() {
     for(int i=0;i<FaceNum;i++){
         for(int j=0;j<3;j++){
             int pNum = Indices[ i*3 + j];
-            point[j] = vec3( Vertices[ pNum*3 ], Vertices[ pNum*3 +1]-0.75, Vertices[ pNum*3 +2]-2);
+            point[j] = vec3( Vertices[ pNum*3 ]+0.5, Vertices[ pNum*3 +1]-2.3, Vertices[ pNum*3 +2]-2);
         }
 	scene = add_triangle(scene, i, point[0], point[1], point[2], mat_ambient, mat_diffuse, mat_specular,  mat_shineness, reflectance, refractance, refractivity);
     }
 //    delete [] Vertices; Vertices = NULL;
  //   delete [] Indices; Indices = NULL;
 
-    const char piece[] = "chess_pieces/chess_piece.smf";
+    const char piece[] = "chess_pieces/bishop.smf";
     readSMF(piece);
 
     mat_ambient = vec3(0.6, 0.6, 0.6);
@@ -133,15 +133,14 @@ void set_up_chess() {
     mat_shineness = 40;
 
     reflectance = 0.2;
-    refractance = 0.6;
 
-    refractance = 0.6;
+    refractance = 0.7;
 
 
     for(int i=0;i<FaceNum;i++){
         for(int j=0;j<3;j++){
             int pNum = Indices[ i*3 + j];
-            point[j] = vec3( Vertices[ pNum*3 ]  , Vertices[ pNum*3 +1], Vertices[ pNum*3 +2] -2.5 );
+            point[j] = vec3( Vertices[ pNum*3 ], Vertices[ pNum*3 +1]-0.25, Vertices[ pNum*3 +2]-0.2 );
         }
 	scene = add_triangle(scene, i+FaceNum, point[0], point[1], point[2], mat_ambient, mat_diffuse, mat_specular,  mat_shineness, reflectance, refractance, refractivity);
     }
