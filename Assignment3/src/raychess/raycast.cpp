@@ -217,17 +217,16 @@ int main( int argc, char **argv )
 	//printf("%d\n",win_width);
 	//printf("%d\n",win_height);
 	// Parse the arguments
-	if (argc < 3) {
+	if (argc < 2) {
 		printf("Missing arguments ... use:\n");
-		printf("./raycast [-u | -d] step_max <options>\n");
 		return -1;
 	}
 
 	set_up_chess();
-	step_max = atoi(argv[2]); // maximum level of recursions
+	step_max = atoi(argv[1]); // maximum level of recursions
 
 	// Optional arguments
-	for(int i = 3; i < argc; i++)
+	for(int i = 2; i < argc; i++)
 	{
 		if (strcmp(argv[i], "+s") == 0)	shadow_on = 1;
 		else if (strcmp(argv[i], "+l")==0) reflect_on = 1;

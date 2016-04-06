@@ -39,7 +39,7 @@ void set_up_default_scene() {
   light1_intensity.x = 1.0;
   light1_intensity.y = 1.0;
   light1_intensity.z = 1.0;
-  light1_shadow = 0.5;
+  light1_shadow = 0.2;
 
   // set up decay parameters
   decay_a = 0.5;
