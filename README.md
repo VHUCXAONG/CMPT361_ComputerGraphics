@@ -1,7 +1,7 @@
 # CMPT361_IntroToComputerGraphics
-For my SFU course CMPT361, Introduction to Computer Graphics
+This is the project for my SFU course CMPT361, Introduction to Computer Graphics
 
-###File Directory
+## File Directory
 
 **Assignment1:** FruitTetris in 2D
 
